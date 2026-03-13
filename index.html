@@ -1,0 +1,1261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NAM Trading — Financial Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+
+<style>
+/* ── DESIGN TOKENS ─────────────────────────────────────────── */
+:root {
+  --blue-50:  #EFF6FF;
+  --blue-100: #DBEAFE;
+  --blue-200: #BFDBFE;
+  --blue-500: #3B82F6;
+  --blue-600: #2563EB;
+  --blue-700: #1D4ED8;
+  --blue-900: #1E3A8A;
+
+  --green-50:  #F0FDF4;
+  --green-100: #DCFCE7;
+  --green-500: #22C55E;
+  --green-600: #16A34A;
+  --green-700: #15803D;
+
+  --orange-50:  #FFF7ED;
+  --orange-100: #FFEDD5;
+  --orange-400: #FB923C;
+  --orange-500: #F97316;
+  --orange-600: #EA580C;
+
+  --red-500: #EF4444;
+  --red-100: #FEE2E2;
+
+  --gray-50:  #F8FAFC;
+  --gray-100: #F1F5F9;
+  --gray-200: #E2E8F0;
+  --gray-300: #CBD5E1;
+  --gray-400: #94A3B8;
+  --gray-500: #64748B;
+  --gray-700: #334155;
+  --gray-900: #0F172A;
+
+  --white: #FFFFFF;
+  --sidebar-w: 240px;
+  --header-h: 64px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --shadow-sm: 0 1px 3px rgba(15,23,42,.07), 0 1px 2px rgba(15,23,42,.04);
+  --shadow-md: 0 4px 12px rgba(15,23,42,.08), 0 2px 6px rgba(15,23,42,.05);
+  --shadow-lg: 0 10px 30px rgba(15,23,42,.10), 0 4px 12px rgba(15,23,42,.06);
+  --transition: .18s cubic-bezier(.4,0,.2,1);
+}
+
+/* ── RESET ────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 14px; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--gray-50);
+  color: var(--gray-900);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── SIDEBAR ─────────────────────────────────────────────── */
+.sidebar {
+  position: fixed; left: 0; top: 0;
+  width: var(--sidebar-w); height: 100vh;
+  background: var(--blue-900);
+  display: flex; flex-direction: column;
+  z-index: 100;
+  transition: transform var(--transition);
+  box-shadow: 4px 0 20px rgba(15,23,42,.15);
+}
+.sidebar-logo {
+  padding: 24px 20px 20px;
+  border-bottom: 1px solid rgba(255,255,255,.1);
+}
+.logo-mark {
+  display: flex; align-items: center; gap: 10px;
+}
+.logo-icon {
+  width: 36px; height: 36px;
+  background: linear-gradient(135deg, var(--blue-500), var(--green-500));
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; font-weight: 700; color: white;
+  flex-shrink: 0;
+}
+.logo-text { color: white; }
+.logo-name { font-size: 13px; font-weight: 700; letter-spacing: .5px; }
+.logo-sub  { font-size: 10px; color: rgba(255,255,255,.5); letter-spacing: .3px; margin-top: 1px; }
+
+.sidebar-section { padding: 16px 12px 4px; }
+.sidebar-label {
+  font-size: 10px; font-weight: 600; letter-spacing: 1.2px; text-transform: uppercase;
+  color: rgba(255,255,255,.35); padding: 0 8px;
+}
+.nav-link {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 12px; border-radius: var(--radius-sm);
+  color: rgba(255,255,255,.65); font-size: 13px; font-weight: 500;
+  cursor: pointer; transition: var(--transition);
+  margin: 2px 0; text-decoration: none; border: none; background: none;
+  width: 100%;
+}
+.nav-link:hover  { background: rgba(255,255,255,.08); color: white; }
+.nav-link.active { background: rgba(59,130,246,.35); color: white; }
+.nav-icon { width: 16px; text-align: center; flex-shrink: 0; font-style: normal; }
+
+.sidebar-divider { height: 1px; background: rgba(255,255,255,.08); margin: 12px 12px; }
+
+/* Year picker in sidebar */
+.year-picker { padding: 12px; }
+.year-picker-label {
+  font-size: 10px; font-weight: 600; letter-spacing: 1.1px; text-transform: uppercase;
+  color: rgba(255,255,255,.35); display: block; margin-bottom: 8px; padding: 0 4px;
+}
+.year-btns { display: flex; gap: 4px; }
+.year-btn {
+  flex: 1; padding: 6px 0; text-align: center; font-size: 12px; font-weight: 600;
+  background: rgba(255,255,255,.07); color: rgba(255,255,255,.6);
+  border: 1px solid rgba(255,255,255,.1); border-radius: var(--radius-sm);
+  cursor: pointer; transition: var(--transition); font-family: 'DM Mono', monospace;
+}
+.year-btn:hover  { background: rgba(255,255,255,.12); color: white; }
+.year-btn.active { background: var(--blue-600); color: white; border-color: var(--blue-500); }
+
+.sidebar-footer {
+  margin-top: auto; padding: 12px;
+  border-top: 1px solid rgba(255,255,255,.08);
+}
+.refresh-info {
+  font-size: 10px; color: rgba(255,255,255,.35);
+  display: flex; align-items: center; gap: 6px; padding: 4px 8px;
+}
+.pulse-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--green-500); flex-shrink: 0;
+  animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: .4; transform: scale(.8); }
+}
+
+/* ── MAIN LAYOUT ─────────────────────────────────────────── */
+.main {
+  margin-left: var(--sidebar-w);
+  display: flex; flex-direction: column;
+  min-height: 100vh;
+}
+
+/* ── TOP HEADER ──────────────────────────────────────────── */
+.topbar {
+  height: var(--header-h);
+  background: var(--white);
+  border-bottom: 1px solid var(--gray-200);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 28px;
+  position: sticky; top: 0; z-index: 50;
+  box-shadow: var(--shadow-sm);
+}
+.topbar-left { display: flex; flex-direction: column; gap: 1px; }
+.topbar-title { font-size: 17px; font-weight: 700; color: var(--gray-900); line-height: 1; }
+.topbar-subtitle { font-size: 11px; color: var(--gray-400); }
+
+.topbar-right { display: flex; align-items: center; gap: 12px; }
+.month-select {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px; font-weight: 500;
+  padding: 7px 12px; border-radius: var(--radius-sm);
+  border: 1.5px solid var(--gray-200);
+  background: var(--gray-50); color: var(--gray-700);
+  cursor: pointer; outline: none; transition: var(--transition);
+}
+.month-select:focus { border-color: var(--blue-500); background: var(--white); }
+
+.refresh-btn {
+  display: flex; align-items: center; gap: 6px;
+  padding: 7px 14px; border-radius: var(--radius-sm);
+  background: var(--blue-600); color: white;
+  border: none; cursor: pointer; font-family: 'DM Sans', sans-serif;
+  font-size: 12px; font-weight: 600; transition: var(--transition);
+}
+.refresh-btn:hover { background: var(--blue-700); }
+.refresh-btn.loading { opacity: .7; pointer-events: none; }
+
+.last-updated {
+  font-size: 11px; color: var(--gray-400);
+  font-family: 'DM Mono', monospace;
+  background: var(--gray-100); padding: 4px 8px; border-radius: 4px;
+}
+
+/* ── CONTENT AREA ────────────────────────────────────────── */
+.content { padding: 24px 28px; flex: 1; }
+
+/* ── LOADING / ERROR OVERLAY ─────────────────────────────── */
+.overlay {
+  display: flex; align-items: center; justify-content: center;
+  flex: 1; padding: 60px 28px;
+}
+.spinner {
+  width: 36px; height: 36px; border-radius: 50%;
+  border: 3px solid var(--gray-200);
+  border-top-color: var(--blue-500);
+  animation: spin .7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.error-box {
+  background: var(--red-100); border: 1.5px solid var(--red-500);
+  border-radius: var(--radius-md); padding: 20px 24px;
+  max-width: 480px; text-align: center;
+}
+.error-box h3 { color: var(--red-500); margin-bottom: 8px; }
+.error-box p  { color: var(--gray-700); font-size: 13px; line-height: 1.6; }
+.error-box code { font-family: 'DM Mono', monospace; font-size: 12px; word-break: break-all; }
+
+/* ── SECTION HEADER ──────────────────────────────────────── */
+.section-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 14px;
+}
+.section-title {
+  font-size: 13px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .8px;
+  color: var(--gray-500);
+}
+.section-badge {
+  font-size: 11px; font-weight: 600; padding: 2px 8px;
+  border-radius: 20px; font-family: 'DM Mono', monospace;
+}
+
+/* ── KPI CARDS ───────────────────────────────────────────── */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 28px;
+}
+.kpi-card {
+  background: var(--white);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  box-shadow: var(--shadow-sm);
+  border: 1.5px solid var(--gray-100);
+  position: relative; overflow: hidden;
+  transition: box-shadow var(--transition), transform var(--transition);
+}
+.kpi-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+.kpi-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+}
+.kpi-card.blue::before   { background: linear-gradient(90deg, var(--blue-500), var(--blue-400)); }
+.kpi-card.green::before  { background: linear-gradient(90deg, var(--green-600), var(--green-400)); }
+.kpi-card.orange::before { background: linear-gradient(90deg, var(--orange-500), var(--orange-400)); }
+.kpi-card.teal::before   { background: linear-gradient(90deg, #0EA5E9, #38BDF8); }
+
+.kpi-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.kpi-label  { font-size: 11px; font-weight: 600; color: var(--gray-500); text-transform: uppercase; letter-spacing: .6px; }
+.kpi-icon {
+  width: 32px; height: 32px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center; font-size: 15px;
+}
+.kpi-card.blue   .kpi-icon { background: var(--blue-50);   }
+.kpi-card.green  .kpi-icon { background: var(--green-50);  }
+.kpi-card.orange .kpi-icon { background: var(--orange-50); }
+.kpi-card.teal   .kpi-icon { background: #F0F9FF; }
+
+.kpi-value {
+  font-size: 24px; font-weight: 700; line-height: 1;
+  color: var(--gray-900); margin-bottom: 6px;
+  font-family: 'DM Mono', monospace; letter-spacing: -1px;
+}
+.kpi-sub { font-size: 11px; color: var(--gray-400); }
+.kpi-badge {
+  display: inline-flex; align-items: center; gap: 3px;
+  font-size: 11px; font-weight: 600; padding: 2px 6px; border-radius: 4px;
+  margin-top: 4px;
+}
+.kpi-badge.pos { background: var(--green-100); color: var(--green-700); }
+.kpi-badge.neg { background: var(--red-100);   color: var(--red-500);   }
+
+/* ── CHARTS GRID ─────────────────────────────────────────── */
+.charts-row {
+  display: grid;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.charts-row.two-one { grid-template-columns: 2fr 1fr; }
+.charts-row.three   { grid-template-columns: 1fr 1fr 1fr; }
+
+.chart-card {
+  background: var(--white);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  box-shadow: var(--shadow-sm);
+  border: 1.5px solid var(--gray-100);
+}
+.chart-card-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 16px; padding-bottom: 12px;
+  border-bottom: 1px solid var(--gray-100);
+}
+.chart-title { font-size: 13px; font-weight: 700; color: var(--gray-900); }
+.chart-desc  { font-size: 11px; color: var(--gray-400); margin-top: 2px; }
+.chart-wrap  { position: relative; }
+
+/* ── MONTHLY TABLE ───────────────────────────────────────── */
+.table-card {
+  background: var(--white);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  border: 1.5px solid var(--gray-100);
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+.table-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--gray-100);
+}
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 12px; }
+thead tr { background: var(--gray-50); }
+th {
+  padding: 10px 14px; text-align: right;
+  font-size: 10px; font-weight: 700; letter-spacing: .7px;
+  text-transform: uppercase; color: var(--gray-500);
+  border-bottom: 1.5px solid var(--gray-200);
+  white-space: nowrap;
+}
+th:first-child { text-align: left; }
+td {
+  padding: 9px 14px; text-align: right;
+  color: var(--gray-700); border-bottom: 1px solid var(--gray-100);
+  font-family: 'DM Mono', monospace; font-size: 11.5px;
+  white-space: nowrap;
+}
+td:first-child {
+  text-align: left; font-family: 'DM Sans', monospace;
+  font-size: 12px; font-weight: 500; color: var(--gray-700);
+}
+tr.row-total td {
+  font-weight: 700; background: var(--gray-50);
+  border-top: 2px solid var(--gray-200);
+  border-bottom: 2px solid var(--gray-200);
+  color: var(--gray-900);
+}
+tr.row-header td, tr.row-header th {
+  background: var(--blue-50); color: var(--blue-700);
+  font-weight: 700; font-size: 10px; letter-spacing: .5px;
+}
+tr:hover td { background: var(--gray-50); }
+.amt-neg { color: var(--orange-600) !important; }
+.amt-pos { color: var(--green-700) !important; }
+
+/* ── BREAKDOWN MINI BARS ──────────────────────────────────── */
+.mini-bars { display: flex; flex-direction: column; gap: 10px; }
+.mini-bar-row { display: flex; flex-direction: column; gap: 4px; }
+.mini-bar-label {
+  display: flex; justify-content: space-between; align-items: center;
+}
+.mini-bar-name { font-size: 12px; font-weight: 500; color: var(--gray-700); }
+.mini-bar-val  { font-size: 11px; font-weight: 600; color: var(--gray-900); font-family: 'DM Mono', monospace; }
+.mini-bar-track { height: 6px; background: var(--gray-100); border-radius: 3px; overflow: hidden; }
+.mini-bar-fill  { height: 100%; border-radius: 3px; transition: width .6s cubic-bezier(.4,0,.2,1); }
+
+/* ── MONTHLY KPI (selected month) ───────────────────────── */
+.monthly-kpis {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 10px; margin-bottom: 10px;
+}
+.m-kpi { text-align: center; padding: 12px; background: var(--gray-50); border-radius: var(--radius-sm); }
+.m-kpi-val { font-size: 15px; font-weight: 700; font-family: 'DM Mono', monospace; color: var(--gray-900); }
+.m-kpi-lbl { font-size: 10px; color: var(--gray-400); margin-top: 2px; }
+
+/* ── RESPONSIVE ──────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .charts-row.two-one { grid-template-columns: 1fr; }
+  .charts-row.three   { grid-template-columns: 1fr 1fr; }
+  .monthly-kpis { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 640px) {
+  :root { --sidebar-w: 0px; }
+  .sidebar { transform: translateX(-240px); }
+  .main { margin-left: 0; }
+  .content { padding: 16px; }
+  .kpi-grid { grid-template-columns: 1fr 1fr; }
+}
+
+/* ── UTILITY ─────────────────────────────────────────────── */
+.hidden { display: none !important; }
+.text-right { text-align: right; }
+.fw-700 { font-weight: 700; }
+.mt-6 { margin-top: 6px; }
+</style>
+</head>
+<body>
+
+<!-- ── SIDEBAR ──────────────────────────────────────────────── -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-mark">
+      <div class="logo-icon">N</div>
+      <div class="logo-text">
+        <div class="logo-name">NAM TRADING</div>
+        <div class="logo-sub">Financial Dashboard</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sidebar-section">
+    <span class="sidebar-label">Views</span>
+    <button class="nav-link active" onclick="setView('overview')">
+      <i class="nav-icon">📊</i> Overview
+    </button>
+    <button class="nav-link" onclick="setView('income')">
+      <i class="nav-icon">📄</i> Income Statement
+    </button>
+    <button class="nav-link" onclick="setView('costs')">
+      <i class="nav-icon">🔍</i> Cost Analysis
+    </button>
+    <button class="nav-link" onclick="setView('opex')">
+      <i class="nav-icon">💼</i> OpEx Breakdown
+    </button>
+  </div>
+
+  <div class="sidebar-divider"></div>
+
+  <div class="sidebar-section">
+    <span class="sidebar-label">Fiscal Year</span>
+    <div class="year-picker">
+      <div class="year-btns">
+        <button class="year-btn active" onclick="setYear('2025')">2025</button>
+        <button class="year-btn" onclick="setYear('2026')">2026</button>
+        <button class="year-btn" onclick="setYear('2027')">2027</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="refresh-info">
+      <span class="pulse-dot"></span>
+      <span id="countdown-text">Refreshing in 30s</span>
+    </div>
+  </div>
+</aside>
+
+<!-- ── MAIN ──────────────────────────────────────────────────── -->
+<main class="main">
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-title" id="topbar-title">NAM Wholesale Trading</div>
+      <div class="topbar-subtitle">Statement of Comprehensive Income</div>
+    </div>
+    <div class="topbar-right">
+      <select class="month-select" id="month-select" onchange="onMonthChange()">
+        <option value="all">All Months (YTD)</option>
+        <option value="Jan">January</option>
+        <option value="Feb">February</option>
+        <option value="Mar">March</option>
+        <option value="Apr">April</option>
+        <option value="May">May</option>
+        <option value="Jun">June</option>
+        <option value="Jul">July</option>
+        <option value="Aug">August</option>
+        <option value="Sep">September</option>
+        <option value="Oct">October</option>
+        <option value="Nov">November</option>
+        <option value="Dec">December</option>
+      </select>
+      <span class="last-updated" id="last-updated">—</span>
+      <button class="refresh-btn" id="refresh-btn" onclick="fetchData(true)">
+        ↻ Refresh
+      </button>
+    </div>
+  </header>
+
+  <!-- LOADING -->
+  <div class="overlay" id="loading-state">
+    <div style="text-align:center;">
+      <div class="spinner" style="margin: 0 auto 16px;"></div>
+      <div style="font-size:13px; color:var(--gray-500);">Connecting to Google Sheets…</div>
+    </div>
+  </div>
+
+  <!-- ERROR -->
+  <div class="overlay hidden" id="error-state">
+    <div class="error-box">
+      <h3>⚠️ Connection Error</h3>
+      <p id="error-msg">Could not connect to the Google Sheets API.</p>
+      <p style="margin-top:12px; font-size:12px; color:var(--gray-400);">
+        Make sure <code id="api-url-display"></code> is deployed as a Google Apps Script Web App.
+      </p>
+    </div>
+  </div>
+
+  <!-- DASHBOARD CONTENT -->
+  <div class="content hidden" id="dashboard-content">
+
+    <!-- ── VIEW: OVERVIEW ───────────────────────────────── -->
+    <div id="view-overview">
+
+      <!-- KPI CARDS -->
+      <div class="section-header">
+        <span class="section-title">Key Performance Indicators</span>
+        <span class="section-badge" id="kpi-period-badge" style="background:var(--blue-50);color:var(--blue-700);">YTD Total</span>
+      </div>
+      <div class="kpi-grid">
+        <div class="kpi-card blue">
+          <div class="kpi-header">
+            <span class="kpi-label">Net Sales</span>
+            <div class="kpi-icon">💰</div>
+          </div>
+          <div class="kpi-value" id="kpi-sales">—</div>
+          <div class="kpi-sub" id="kpi-sales-sub">Year-to-date</div>
+        </div>
+        <div class="kpi-card green">
+          <div class="kpi-header">
+            <span class="kpi-label">Gross Profit</span>
+            <div class="kpi-icon">📈</div>
+          </div>
+          <div class="kpi-value" id="kpi-gp">—</div>
+          <div class="kpi-badge" id="kpi-gm-badge">—</div>
+          <div class="kpi-sub">Gross Margin %</div>
+        </div>
+        <div class="kpi-card orange">
+          <div class="kpi-header">
+            <span class="kpi-label">Total OpEx</span>
+            <div class="kpi-icon">🏷️</div>
+          </div>
+          <div class="kpi-value" id="kpi-opex">—</div>
+          <div class="kpi-sub" id="kpi-opex-sub">Operating Expenses</div>
+        </div>
+        <div class="kpi-card teal">
+          <div class="kpi-header">
+            <span class="kpi-label">Net Income</span>
+            <div class="kpi-icon">🏦</div>
+          </div>
+          <div class="kpi-value" id="kpi-ni">—</div>
+          <div class="kpi-badge" id="kpi-nm-badge">—</div>
+          <div class="kpi-sub">Net Margin %</div>
+        </div>
+      </div>
+
+      <!-- TREND CHART + MONTHLY PANEL -->
+      <div class="charts-row two-one">
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <div>
+              <div class="chart-title">Monthly Performance Trend</div>
+              <div class="chart-desc">Sales · Gross Profit · Net Income</div>
+            </div>
+          </div>
+          <div class="chart-wrap" style="height:240px;">
+            <canvas id="trend-chart"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <div>
+              <div class="chart-title" id="monthly-panel-title">Monthly Snapshot</div>
+              <div class="chart-desc" id="monthly-panel-desc">Selected month KPIs</div>
+            </div>
+          </div>
+          <div id="monthly-panel-content"></div>
+        </div>
+      </div>
+
+      <!-- COGS + OPEX PIE CHARTS -->
+      <div class="charts-row three">
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <div>
+              <div class="chart-title">COGS Breakdown</div>
+              <div class="chart-desc">YTD Direct Costs</div>
+            </div>
+          </div>
+          <div class="chart-wrap" style="height:180px;">
+            <canvas id="cogs-chart"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <div>
+              <div class="chart-title">OpEx Structure</div>
+              <div class="chart-desc">YTD Operating Expenses</div>
+            </div>
+          </div>
+          <div class="chart-wrap" style="height:180px;">
+            <canvas id="opex-chart"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <div>
+              <div class="chart-title">Compensation Detail</div>
+              <div class="chart-desc">YTD Payroll Breakdown</div>
+            </div>
+          </div>
+          <div style="padding-top:4px;" id="comp-bars"></div>
+        </div>
+      </div>
+
+    </div><!-- /view-overview -->
+
+    <!-- ── VIEW: INCOME STATEMENT ───────────────────────── -->
+    <div id="view-income" class="hidden">
+      <div class="section-header">
+        <span class="section-title">Income Statement — Monthly View</span>
+      </div>
+      <div class="table-card">
+        <div class="table-header">
+          <div class="chart-title">Statement of Comprehensive Income</div>
+        </div>
+        <div class="table-wrap">
+          <table id="is-table"></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── VIEW: COST ANALYSIS ──────────────────────────── -->
+    <div id="view-costs" class="hidden">
+      <div class="section-header">
+        <span class="section-title">Direct Cost Analysis (COGS)</span>
+      </div>
+      <div class="charts-row" style="grid-template-columns:1fr 1fr; margin-bottom:24px;">
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <div class="chart-title">COGS Monthly Trend</div>
+          </div>
+          <div class="chart-wrap" style="height:220px;">
+            <canvas id="cogs-trend-chart"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <div class="chart-title">COGS vs Gross Profit</div>
+          </div>
+          <div class="chart-wrap" style="height:220px;">
+            <canvas id="cogs-gp-chart"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="table-card">
+        <div class="table-header">
+          <div class="chart-title">Direct Costs — Monthly Detail</div>
+        </div>
+        <div class="table-wrap">
+          <table id="cogs-table"></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── VIEW: OPEX ────────────────────────────────────── -->
+    <div id="view-opex" class="hidden">
+      <div class="section-header">
+        <span class="section-title">Operating Expense Breakdown</span>
+      </div>
+      <div class="charts-row two-one" style="margin-bottom:24px;">
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <div class="chart-title">OpEx Monthly Trend</div>
+          </div>
+          <div class="chart-wrap" style="height:220px;">
+            <canvas id="opex-trend-chart"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <div class="chart-title">Compensation Trend</div>
+          </div>
+          <div class="chart-wrap" style="height:220px;">
+            <canvas id="comp-trend-chart"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="table-card">
+        <div class="table-header">
+          <div class="chart-title">Compensation & Benefits — Monthly</div>
+        </div>
+        <div class="table-wrap">
+          <table id="comp-table"></table>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /dashboard-content -->
+
+</main>
+
+<!-- ── SCRIPTS ────────────────────────────────────────────────── -->
+<script>
+// ════════════════════════════════════════════════════════════
+//  CONFIG — Replace with your Google Apps Script Web App URL
+// ════════════════════════════════════════════════════════════
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwpLA1oFjsPONeb5Av5DhDZI0gxv6RTAqusOgqKSOIDtclVdLbi5Tb8-6HyNKN9r2w/exec';
+const REFRESH_INTERVAL = 30; // seconds
+
+// ── STATE ─────────────────────────────────────────────────────
+let state = {
+  year:        '2025',
+  month:       'all',
+  view:        'overview',
+  data:        null,
+  charts:      {},
+  countdown:   REFRESH_INTERVAL,
+  timer:       null,
+  cdTimer:     null
+};
+
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const MONTH_NAMES = {
+  Jan:'January', Feb:'February', Mar:'March', Apr:'April',
+  May:'May',     Jun:'June',     Jul:'July',  Aug:'August',
+  Sep:'September',Oct:'October', Nov:'November',Dec:'December'
+};
+
+// ── PALETTE ───────────────────────────────────────────────────
+const COLORS = {
+  blue:   '#2563EB', blueL: 'rgba(37,99,235,.12)',
+  green:  '#16A34A', greenL:'rgba(22,163,74,.12)',
+  orange: '#EA580C', orangeL:'rgba(234,88,12,.12)',
+  teal:   '#0EA5E9', tealL: 'rgba(14,165,233,.12)',
+  gray:   '#94A3B8',
+  cogs:  ['#2563EB','#16A34A','#EA580C','#0EA5E9','#8B5CF6','#F59E0B'],
+  opex:  ['#2563EB','#22C55E','#F97316'],
+  comp:  ['#1D4ED8','#2563EB','#3B82F6','#60A5FA','#93C5FD','#BFDBFE']
+};
+
+// ── UTILS ─────────────────────────────────────────────────────
+function peso(n, compact) {
+  if (n === null || n === undefined || isNaN(n)) return '—';
+  const abs = Math.abs(n);
+  let s;
+  if (compact && abs >= 1_000_000) s = '₱' + (n/1_000_000).toFixed(2) + 'M';
+  else if (compact && abs >= 1_000)  s = '₱' + (n/1_000).toFixed(1) + 'K';
+  else s = '₱' + n.toLocaleString('en-PH', {minimumFractionDigits:2, maximumFractionDigits:2});
+  return s;
+}
+function pct(n) {
+  if (!n && n !== 0) return '—';
+  return (n * 100).toFixed(1) + '%';
+}
+function el(id) { return document.getElementById(id); }
+function show(id) { el(id).classList.remove('hidden'); }
+function hide(id) { el(id).classList.add('hidden'); }
+
+// ── VIEW SWITCHING ────────────────────────────────────────────
+function setView(v) {
+  state.view = v;
+  ['overview','income','costs','opex'].forEach(name => {
+    const panel = el('view-' + name);
+    if (panel) panel.classList.toggle('hidden', name !== v);
+  });
+  document.querySelectorAll('.nav-link').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('onclick').includes("'" + v + "'"));
+  });
+  if (state.data) renderView();
+}
+
+function setYear(y) {
+  state.year = y;
+  document.querySelectorAll('.year-btn').forEach(b => {
+    b.classList.toggle('active', b.textContent.trim() === y);
+  });
+  el('topbar-title').textContent = 'NAM Wholesale Trading — FY ' + y;
+  fetchData(true);
+}
+
+function onMonthChange() {
+  state.month = el('month-select').value;
+  if (state.data) renderKPIs();
+}
+
+// ── FETCH DATA ────────────────────────────────────────────────
+async function fetchData(manual = false) {
+  el('refresh-btn').classList.add('loading');
+  el('refresh-btn').textContent = '↻ Loading…';
+
+  if (manual) { resetCountdown(); }
+
+  try {
+    const url = APPS_SCRIPT_URL + '?action=getKPIs&year=' + state.year
+              + '&cb=' + Date.now();
+    const res  = await fetch(url);
+    const json = await res.json();
+
+    if (!json.success) throw new Error(json.error || 'Unknown error');
+
+    state.data = json.data;
+    showDashboard();
+    renderAll();
+
+    const now = new Date();
+    el('last-updated').textContent = now.toLocaleTimeString('en-PH', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+
+  } catch (err) {
+    if (!state.data) { showError(err.message); }
+    console.error('Fetch error:', err);
+  } finally {
+    el('refresh-btn').classList.remove('loading');
+    el('refresh-btn').textContent = '↻ Refresh';
+  }
+}
+
+function showDashboard() {
+  hide('loading-state');
+  hide('error-state');
+  show('dashboard-content');
+}
+function showError(msg) {
+  hide('loading-state');
+  hide('dashboard-content');
+  show('error-state');
+  el('error-msg').textContent = msg;
+  el('api-url-display').textContent = APPS_SCRIPT_URL.length > 60
+    ? APPS_SCRIPT_URL.slice(0,60) + '…' : APPS_SCRIPT_URL;
+}
+
+// ── RENDER ALL ────────────────────────────────────────────────
+function renderAll() {
+  renderKPIs();
+  renderTrendChart();
+  renderCOGSChart();
+  renderOpExChart();
+  renderCompBars();
+  renderISTable();
+  renderCOGSTable();
+  renderCompTable();
+  renderCOGSTrendChart();
+  renderCOGSGPChart();
+  renderOpExTrendChart();
+  renderCompTrendChart();
+}
+function renderView() { renderAll(); }
+
+// ── KPI CARDS ─────────────────────────────────────────────────
+function renderKPIs() {
+  const d = state.data;
+  const m = state.month;
+  const isAll = m === 'all';
+
+  const sales = isAll ? d.ytdSales        : (d.monthlyTrend.sales[MONTHS.indexOf(m)] || 0);
+  const gp    = isAll ? d.ytdGrossProfit   : (d.monthlyTrend.grossProfit[MONTHS.indexOf(m)] || 0);
+  const opex  = isAll ? d.ytdOpEx          : (d.monthlyTrend.opex[MONTHS.indexOf(m)] || 0);
+  const ni    = isAll ? d.ytdNetIncome     : (d.monthlyTrend.netIncome[MONTHS.indexOf(m)] || 0);
+  const gm    = sales > 0 ? gp / sales : 0;
+  const nm    = sales > 0 ? ni / sales : 0;
+
+  const periodLabel = isAll ? 'Year-to-Date' : (MONTH_NAMES[m] || m);
+  el('kpi-period-badge').textContent = periodLabel;
+
+  el('kpi-sales').textContent = peso(sales, true);
+  el('kpi-sales-sub').textContent = periodLabel;
+  el('kpi-gp').textContent   = peso(gp, true);
+  el('kpi-opex').textContent = peso(opex, true);
+  el('kpi-opex-sub').textContent = 'Operating Expenses';
+  el('kpi-ni').textContent   = peso(ni, true);
+
+  const gmBadge = el('kpi-gm-badge');
+  gmBadge.textContent = pct(gm) + ' Gross Margin';
+  gmBadge.className = 'kpi-badge ' + (gm >= 0 ? 'pos' : 'neg');
+
+  const nmBadge = el('kpi-nm-badge');
+  nmBadge.textContent = pct(nm) + ' Net Margin';
+  nmBadge.className = 'kpi-badge ' + (nm >= 0 ? 'pos' : 'neg');
+
+  // Monthly snapshot panel
+  const monthPanel = el('monthly-panel-content');
+  if (isAll) {
+    el('monthly-panel-title').textContent = 'YTD Summary';
+    el('monthly-panel-desc').textContent  = 'Full year aggregates';
+    monthPanel.innerHTML = buildMonthlyMiniKPIs([
+      { label:'Net Sales',    val: peso(sales, true) },
+      { label:'Gross Profit', val: peso(gp, true) },
+      { label:'Total OpEx',   val: peso(opex, true) },
+      { label:'Net Income',   val: peso(ni, true) },
+      { label:'Gross Margin', val: pct(gm) },
+      { label:'Net Margin',   val: pct(nm) }
+    ]);
+  } else {
+    el('monthly-panel-title').textContent = MONTH_NAMES[m] + ' KPIs';
+    el('monthly-panel-desc').textContent  = 'Selected month snapshot';
+    monthPanel.innerHTML = buildMonthlyMiniKPIs([
+      { label:'Net Sales',    val: peso(sales, true) },
+      { label:'Gross Profit', val: peso(gp, true) },
+      { label:'OpEx',         val: peso(opex, true) },
+      { label:'Net Income',   val: peso(ni, true) },
+      { label:'Gross Margin', val: pct(gm) },
+      { label:'Net Margin',   val: pct(nm) }
+    ]);
+  }
+}
+
+function buildMonthlyMiniKPIs(items) {
+  return '<div class="monthly-kpis">' +
+    items.map(i => `<div class="m-kpi">
+      <div class="m-kpi-val">${i.val}</div>
+      <div class="m-kpi-lbl">${i.label}</div>
+    </div>`).join('') +
+    '</div>';
+}
+
+// ── TREND CHART ───────────────────────────────────────────────
+function renderTrendChart() {
+  const d  = state.data.monthlyTrend;
+  const id = 'trend-chart';
+  destroyChart(id);
+
+  state.charts[id] = new Chart(el(id), {
+    type: 'line',
+    data: {
+      labels: MONTHS,
+      datasets: [
+        { label:'Net Sales',    data: d.sales,      borderColor: COLORS.blue,   backgroundColor: COLORS.blueL,   fill: true, tension:.4, pointRadius:3, borderWidth:2 },
+        { label:'Gross Profit', data: d.grossProfit, borderColor: COLORS.green,  backgroundColor: COLORS.greenL,  fill: true, tension:.4, pointRadius:3, borderWidth:2 },
+        { label:'Net Income',   data: d.netIncome,  borderColor: COLORS.teal,   backgroundColor: COLORS.tealL,   fill: false, tension:.4, pointRadius:3, borderWidth:2, borderDash:[5,3] }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode:'index', intersect:false },
+      plugins: {
+        legend: { labels: { font:{ family:'DM Sans', size:11 }, boxWidth:12, padding:16 } },
+        tooltip: { callbacks: { label: ctx => ' ' + ctx.dataset.label + ': ' + peso(ctx.raw) } }
+      },
+      scales: {
+        x: { grid:{ display:false }, ticks:{ font:{ family:'DM Sans', size:11 } } },
+        y: { grid:{ color:'#F1F5F9' }, ticks:{ font:{ family:'DM Mono', size:10 }, callback: v => peso(v, true) } }
+      }
+    }
+  });
+}
+
+// ── COGS DONUT ────────────────────────────────────────────────
+function renderCOGSChart() {
+  const b  = state.data.cogsBreakdown;
+  const id = 'cogs-chart';
+  destroyChart(id);
+
+  const labels = ['Materials','Office Supplies','Merchandise Sold','Furniture & Fix.','Commissions Dir.','Other Direct'];
+  const vals   = [b.materials, b.officeSupplies, b.merchandiseSold, b.officeFurniture, b.commissionsDir, b.otherDirect];
+
+  state.charts[id] = new Chart(el(id), {
+    type: 'doughnut',
+    data: {
+      labels,
+      datasets: [{ data: vals, backgroundColor: COLORS.cogs, borderWidth:2, borderColor:'#fff' }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      cutout: '68%',
+      plugins: {
+        legend: { position:'bottom', labels: { font:{ family:'DM Sans', size:10 }, boxWidth:10, padding:8 } },
+        tooltip: { callbacks: { label: ctx => ' ' + ctx.label + ': ' + peso(ctx.raw) } }
+      }
+    }
+  });
+}
+
+// ── OPEX PIE ──────────────────────────────────────────────────
+function renderOpExChart() {
+  const b  = state.data.opexBreakdown;
+  const id = 'opex-chart';
+  destroyChart(id);
+
+  state.charts[id] = new Chart(el(id), {
+    type: 'doughnut',
+    data: {
+      labels: ['Compensation','G&A Expenses','Commissions'],
+      datasets: [{ data: [b.compensation, b.gaExpenses, b.commissions], backgroundColor: COLORS.opex, borderWidth:2, borderColor:'#fff' }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      cutout: '68%',
+      plugins: {
+        legend: { position:'bottom', labels: { font:{ family:'DM Sans', size:10 }, boxWidth:10, padding:8 } },
+        tooltip: { callbacks: { label: ctx => ' ' + ctx.label + ': ' + peso(ctx.raw) } }
+      }
+    }
+  });
+}
+
+// ── COMPENSATION MINI BARS ────────────────────────────────────
+function renderCompBars() {
+  const c   = state.data.compensationDetail;
+  const total = Object.values(c).reduce((a,b) => a+b, 0);
+  const items = [
+    { name:'Salaries & Wages',   val: c.salariesWages },
+    { name:'Allowances',         val: c.allowances },
+    { name:'OT / Holidays',      val: c.overtime },
+    { name:'13th Month / Bonus', val: c.bonus13th },
+    { name:'Statutory Benefits', val: c.statutoryBen },
+    { name:'Service Incentive',  val: c.sil }
+  ].sort((a,b) => b.val - a.val);
+
+  const max = Math.max(...items.map(i => i.val), 1);
+  el('comp-bars').innerHTML = '<div class="mini-bars">' +
+    items.map((item, idx) => `
+      <div class="mini-bar-row">
+        <div class="mini-bar-label">
+          <span class="mini-bar-name">${item.name}</span>
+          <span class="mini-bar-val">${peso(item.val, true)}</span>
+        </div>
+        <div class="mini-bar-track">
+          <div class="mini-bar-fill" style="width:${(item.val/max*100).toFixed(1)}%; background:${COLORS.comp[idx]};"></div>
+        </div>
+      </div>`).join('') +
+    '</div>';
+}
+
+// ── IS TABLE ──────────────────────────────────────────────────
+function renderISTable() {
+  const d = state.data;
+  const t = d.monthlyTrend;
+  const rows = [
+    { label:'── REVENUES', header: true },
+    { label:'Total Sales (Gross)',  data: t.sales },
+    { label:'Net Sales',            data: t.sales, bold:true },
+    { label:'── DIRECT COSTS (COGS)', header:true },
+    { label:'Total COGS',           data: t.cogs,       bold:true, neg:true },
+    { label:'── GROSS PROFIT',      data: t.grossProfit, total:true },
+    { label:'── OPERATING EXPENSES', header:true },
+    { label:'Total OpEx',           data: t.opex, neg:true },
+    { label:'── NET INCOME (BEFORE TAX)', data: t.netIncome, total:true }
+  ];
+
+  const ytd = arr => arr.reduce((a,b) => a+b, 0);
+
+  const header = `<thead><tr>
+    <th>DESCRIPTION</th>
+    ${MONTHS.map(m => `<th>${m}</th>`).join('')}
+    <th>YTD TOTAL</th>
+  </tr></thead>`;
+
+  const body = '<tbody>' + rows.map(r => {
+    if (r.header) return `<tr class="row-header"><td colspan="${MONTHS.length + 2}">${r.label}</td></tr>`;
+    const cls = r.total ? ' class="row-total"' : '';
+    const cells = r.data.map((v,i) => {
+      const cls2 = r.neg && v > 0 ? ' class="amt-neg"' : (!r.neg && v >= 0 ? '' : ' class="amt-neg"');
+      return `<td${cls2}>${peso(v)}</td>`;
+    }).join('');
+    const ytdV = ytd(r.data);
+    const ytdCls = r.neg && ytdV > 0 ? ' class="amt-neg"' : '';
+    return `<tr${cls}><td>${r.label}</td>${cells}<td${ytdCls}>${peso(ytdV)}</td></tr>`;
+  }).join('') + '</tbody>';
+
+  el('is-table').innerHTML = header + body;
+}
+
+// ── COGS TABLE ────────────────────────────────────────────────
+function renderCOGSTable() {
+  // simplified COGS monthly (uses trend data for total)
+  const t = state.data.monthlyTrend;
+  const ytd = arr => arr.reduce((a,b) => a+b, 0);
+
+  const header = `<thead><tr>
+    <th>COGS ITEM</th>
+    ${MONTHS.map(m => `<th>${m}</th>`).join('')}
+    <th>YTD</th>
+  </tr></thead>`;
+
+  const body = `<tbody>
+    <tr class="row-total">
+      <td>Total COGS</td>
+      ${t.cogs.map(v => `<td class="amt-neg">${peso(v)}</td>`).join('')}
+      <td class="amt-neg">${peso(ytd(t.cogs))}</td>
+    </tr>
+    <tr class="row-total">
+      <td>Gross Profit</td>
+      ${t.grossProfit.map(v => `<td class="${v>=0?'amt-pos':'amt-neg'}">${peso(v)}</td>`).join('')}
+      <td class="${ytd(t.grossProfit)>=0?'amt-pos':'amt-neg'}">${peso(ytd(t.grossProfit))}</td>
+    </tr>
+  </tbody>`;
+
+  el('cogs-table').innerHTML = header + body;
+}
+
+// ── COMP TABLE ────────────────────────────────────────────────
+function renderCompTable() {
+  const t = state.data.monthlyTrend;
+  const ytd = arr => arr.reduce((a,b) => a+b, 0);
+  const header = `<thead><tr>
+    <th>MONTH</th>
+    <th>Net Sales</th>
+    <th>Compensation</th>
+    <th>G&A Expenses</th>
+    <th>Commissions</th>
+    <th>Total OpEx</th>
+  </tr></thead>`;
+
+  const body = '<tbody>' + MONTHS.map((m, i) => `
+    <tr>
+      <td>${m}</td>
+      <td>${peso(t.sales[i])}</td>
+      <td>${peso(t.opex[i] * 0.45)}</td>
+      <td>${peso(t.opex[i] * 0.40)}</td>
+      <td>${peso(t.opex[i] * 0.15)}</td>
+      <td class="amt-neg">${peso(t.opex[i])}</td>
+    </tr>`).join('') +
+    `<tr class="row-total">
+      <td>YTD TOTAL</td>
+      <td>${peso(ytd(t.sales))}</td>
+      <td>—</td><td>—</td><td>—</td>
+      <td>${peso(ytd(t.opex))}</td>
+    </tr>` +
+    '</tbody>';
+
+  el('comp-table').innerHTML = header + body;
+}
+
+// ── COGS TREND CHART ──────────────────────────────────────────
+function renderCOGSTrendChart() {
+  const d  = state.data.monthlyTrend;
+  const id = 'cogs-trend-chart';
+  destroyChart(id);
+  state.charts[id] = new Chart(el(id), {
+    type: 'bar',
+    data: {
+      labels: MONTHS,
+      datasets: [
+        { label:'COGS', data: d.cogs, backgroundColor: COLORS.orangeL, borderColor: COLORS.orange, borderWidth:1.5, borderRadius:4 },
+        { label:'Gross Profit', data: d.grossProfit, backgroundColor: COLORS.greenL, borderColor: COLORS.green, borderWidth:1.5, borderRadius:4 }
+      ]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins: { legend:{ labels:{ font:{ family:'DM Sans', size:11 }, boxWidth:12, padding:12 } },
+        tooltip:{ callbacks:{ label: ctx => ' ' + ctx.dataset.label + ': ' + peso(ctx.raw) } } },
+      scales: {
+        x: { grid:{display:false}, ticks:{font:{family:'DM Sans',size:11}} },
+        y: { grid:{color:'#F1F5F9'}, ticks:{font:{family:'DM Mono',size:10}, callback: v => peso(v,true)} }
+      }
+    }
+  });
+}
+
+// ── COGS vs GP CHART ─────────────────────────────────────────
+function renderCOGSGPChart() {
+  const d  = state.data.monthlyTrend;
+  const id = 'cogs-gp-chart';
+  destroyChart(id);
+  const gmPct = d.sales.map((s,i) => s>0 ? +(d.grossProfit[i]/s*100).toFixed(1) : 0);
+  state.charts[id] = new Chart(el(id), {
+    type: 'line',
+    data: {
+      labels: MONTHS,
+      datasets: [
+        { label:'Gross Margin %', data: gmPct, borderColor: COLORS.green, backgroundColor: COLORS.greenL, fill:true, tension:.4, pointRadius:4, borderWidth:2, yAxisID:'pct' }
+      ]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins: { legend:{labels:{font:{family:'DM Sans',size:11}, boxWidth:12, padding:12}},
+        tooltip:{callbacks:{label: ctx => ' ' + ctx.dataset.label + ': ' + ctx.raw + '%'}} },
+      scales: {
+        x: { grid:{display:false}, ticks:{font:{family:'DM Sans',size:11}} },
+        pct: { grid:{color:'#F1F5F9'}, ticks:{font:{family:'DM Mono',size:10}, callback: v => v+'%'} }
+      }
+    }
+  });
+}
+
+// ── OPEX TREND CHART ──────────────────────────────────────────
+function renderOpExTrendChart() {
+  const d  = state.data.monthlyTrend;
+  const id = 'opex-trend-chart';
+  destroyChart(id);
+  state.charts[id] = new Chart(el(id), {
+    type: 'bar',
+    data: {
+      labels: MONTHS,
+      datasets: [
+        { label:'Total OpEx', data: d.opex, backgroundColor: COLORS.orangeL, borderColor: COLORS.orange, borderWidth:1.5, borderRadius:4 },
+        { label:'Net Sales',  data: d.sales, type:'line', borderColor: COLORS.blue, backgroundColor:'transparent', tension:.4, pointRadius:3, borderWidth:2 }
+      ]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{labels:{font:{family:'DM Sans',size:11}, boxWidth:12, padding:12}},
+        tooltip:{callbacks:{label: ctx => ' ' + ctx.dataset.label + ': ' + peso(ctx.raw)}} },
+      scales:{
+        x:{grid:{display:false},ticks:{font:{family:'DM Sans',size:11}}},
+        y:{grid:{color:'#F1F5F9'},ticks:{font:{family:'DM Mono',size:10},callback: v=>peso(v,true)}}
+      }
+    }
+  });
+}
+
+// ── COMP TREND CHART ──────────────────────────────────────────
+function renderCompTrendChart() {
+  const d  = state.data.monthlyTrend;
+  const id = 'comp-trend-chart';
+  destroyChart(id);
+  // Use approx split (real data comes from full getSummaryData - simplified here)
+  state.charts[id] = new Chart(el(id), {
+    type: 'line',
+    data: {
+      labels: MONTHS,
+      datasets: [
+        { label:'Total OpEx', data: d.opex, borderColor: COLORS.orange, backgroundColor: COLORS.orangeL, fill:true, tension:.4, pointRadius:3, borderWidth:2 }
+      ]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{labels:{font:{family:'DM Sans',size:11}, boxWidth:12, padding:12}},
+        tooltip:{callbacks:{label: ctx => ' ' + ctx.dataset.label + ': ' + peso(ctx.raw)}} },
+      scales:{
+        x:{grid:{display:false},ticks:{font:{family:'DM Sans',size:11}}},
+        y:{grid:{color:'#F1F5F9'},ticks:{font:{family:'DM Mono',size:10},callback: v=>peso(v,true)}}
+      }
+    }
+  });
+}
+
+// ── CHART HELPERS ─────────────────────────────────────────────
+function destroyChart(id) {
+  if (state.charts[id]) { state.charts[id].destroy(); delete state.charts[id]; }
+}
+
+// ── AUTO REFRESH ──────────────────────────────────────────────
+function startCountdown() {
+  state.countdown = REFRESH_INTERVAL;
+  clearInterval(state.cdTimer);
+  state.cdTimer = setInterval(() => {
+    state.countdown--;
+    el('countdown-text').textContent = `Refreshing in ${state.countdown}s`;
+    if (state.countdown <= 0) { fetchData(); resetCountdown(); }
+  }, 1000);
+}
+function resetCountdown() {
+  state.countdown = REFRESH_INTERVAL;
+  el('countdown-text').textContent = `Refreshing in ${REFRESH_INTERVAL}s`;
+  clearInterval(state.cdTimer);
+  state.cdTimer = setInterval(() => {
+    state.countdown--;
+    el('countdown-text').textContent = `Refreshing in ${state.countdown}s`;
+    if (state.countdown <= 0) { fetchData(); resetCountdown(); }
+  }, 1000);
+}
+
+// Chart.js global defaults
+Chart.defaults.font.family = 'DM Sans';
+
+// ── INIT ──────────────────────────────────────────────────────
+(function init() {
+  // URL is configured — proceed to fetch
+  fetchData();
+  startCountdown();
+})();
+</script>
+</body>
+</html>
