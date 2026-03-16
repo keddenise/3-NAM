@@ -115,7 +115,7 @@ body {
   font-size: 10px; font-weight: 600; letter-spacing: 1.1px; text-transform: uppercase;
   color: rgba(255,255,255,.35); display: block; margin-bottom: 8px; padding: 0 4px;
 }
-.year-btns { display: flex; gap: 4px; }
+.year-btns { display: flex; gap: 4px; flex-wrap: wrap; }
 .year-btn {
   flex: 1; padding: 6px 0; text-align: center; font-size: 12px; font-weight: 600;
   background: rgba(255,255,255,.07); color: rgba(255,255,255,.6);
@@ -686,6 +686,9 @@ table.bonus-tbl tr.bonus-total td:first-child {
         <button class="year-btn active" onclick="setYear('2025')">2025</button>
         <button class="year-btn" onclick="setYear('2026')">2026</button>
         <button class="year-btn" onclick="setYear('2027')">2027</button>
+        <button class="year-btn" onclick="setYear('2028')">2028</button>
+        <button class="year-btn" onclick="setYear('2029')">2029</button>
+        <button class="year-btn" onclick="setYear('2030')">2030</button>
       </div>
     </div>
   </div>
@@ -1057,7 +1060,7 @@ table.bonus-tbl tr.bonus-total td:first-child {
 // ════════════════════════════════════════════════════════════
 //  CONFIG — Replace with your Google Apps Script Web App URL
 // ════════════════════════════════════════════════════════════
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwpLA1oFjsPONeb5Av5DhDZI0gxv6RTAqusOgqKSOIDtclVdLbi5Tb8-6HyNKN9r2w/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzjNe036LSOmL1jvOxMrFGZQn8e-HPwpJ997LVP18T_ie2_5LB3HPwRiui9fG9sO5s/exec';
 const REFRESH_INTERVAL = 30;
 
 // ── STATE ─────────────────────────────────────────────────────
