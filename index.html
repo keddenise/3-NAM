@@ -733,41 +733,73 @@ function initDrillChart(id) {
     return;
   }
   if (id === 'ni') {
-    const opts = barOpts();
-    opts.interaction = { mode:'index', intersect:false };
-    opts.scales.y.grid = { color: ctx2 => ctx2.tick.value === 0 ? 'rgba(100,116,139,.5)' : '#f1f5f9', lineWidth: ctx2 => ctx2.tick.value === 0 ? 2 : 1 };
-    S.charts.drill = new Chart(ctx, {type:'bar', data:{labels:MONTHS, datasets:[
-      {
-        label:'Net Income',
-        data: d.netIncome,
-        backgroundColor: d.netIncome.map(v => v >= 0 ? 'rgba(34,197,94,.25)' : 'rgba(239,68,68,.2)'),
-        borderColor:     d.netIncome.map(v => v >= 0 ? C.green2 : C.red2),
-        borderWidth: 2,
-        borderRadius: 5,
-        borderSkipped: false,
-        order: 2
-      },
-      {
-        label:'Net Sales',
-        data: d.sales,
-        type:'line',
-        borderColor: C.blue2,
-        backgroundColor: (ctx2) => {
-          const chart = ctx2.chart;
-          const {ctx: c2, chartArea} = chart;
-          if (!chartArea) return 'transparent';
-          const grad = c2.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
-          grad.addColorStop(0, 'rgba(59,130,246,.12)');
-          grad.addColorStop(1, 'rgba(59,130,246,.01)');
-          return grad;
+    S.charts.drill = new Chart(ctx, {
+      type:'bar',
+      data:{labels:MONTHS, datasets:[
+        {
+          label:'Net Income',
+          data: d.netIncome,
+          backgroundColor: d.netIncome.map(v => v >= 0 ? 'rgba(34,197,94,.3)' : 'rgba(239,68,68,.25)'),
+          borderColor:     d.netIncome.map(v => v >= 0 ? C.green2 : C.red2),
+          borderWidth: 2,
+          borderRadius: 6,
+          borderSkipped: false,
+          yAxisID: 'yNI',
+          order: 2
         },
-        fill: 'origin',
-        tension:.4, pointRadius:4, pointHoverRadius:6,
-        borderWidth:2.5,
-        pointBackgroundColor:'#fff', pointBorderWidth:2, pointBorderColor:C.blue2,
-        order: 1
+        {
+          label:'Net Sales',
+          data: d.sales,
+          type:'line',
+          borderColor: C.blue2,
+          backgroundColor: (ctx2) => {
+            const chart = ctx2.chart;
+            const {ctx: c2, chartArea} = chart;
+            if (!chartArea) return 'transparent';
+            const grad = c2.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+            grad.addColorStop(0, 'rgba(59,130,246,.12)');
+            grad.addColorStop(1, 'rgba(59,130,246,.01)');
+            return grad;
+          },
+          fill: 'origin',
+          tension:.4, pointRadius:4, pointHoverRadius:6,
+          borderWidth:2.5,
+          pointBackgroundColor:'#fff', pointBorderWidth:2, pointBorderColor:C.blue2,
+          yAxisID: 'ySales',
+          order: 1
+        }
+      ]},
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        interaction:{ mode:'index', intersect:false },
+        plugins:{
+          legend:{ labels:{ color:C.text, font:{size:11}, boxWidth:10, padding:14 } },
+          tooltip:{
+            backgroundColor:'#fff', borderColor:C.border, borderWidth:1.5,
+            titleColor:C.text, bodyColor:C.muted, padding:10, cornerRadius:8,
+            callbacks:{ label: c => ' ' + c.dataset.label + ': ' + peso(c.raw) }
+          }
+        },
+        scales:{
+          x:{ grid:{ display:false }, ticks:{ color:C.muted, font:{size:10} } },
+          ySales:{
+            position:'left',
+            grid:{ color:'#f1f5f9' },
+            ticks:{ color:C.blue2, font:{size:10}, callback: v => peso(v,true) },
+            title:{ display:true, text:'Net Sales', color:C.blue2, font:{size:10, weight:'600'} }
+          },
+          yNI:{
+            position:'right',
+            grid:{ drawOnChartArea:false,
+              color: ctx2 => ctx2.tick.value === 0 ? 'rgba(100,116,139,.4)' : '#f1f5f9',
+              lineWidth: ctx2 => ctx2.tick.value === 0 ? 2 : 1
+            },
+            ticks:{ color:C.muted, font:{size:10}, callback: v => peso(v,true) },
+            title:{ display:true, text:'Net Income', color:C.muted, font:{size:10, weight:'600'} }
+          }
+        }
       }
-    ]}, options:opts});
+    });
     return;
   }
 }
