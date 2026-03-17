@@ -360,7 +360,7 @@ body{font-family:var(--font);background:var(--gray100);color:var(--gray900);font
 </div>
 
 <script>
-const API = 'https://script.google.com/macros/s/AKfycbzttOtXGtrgNGteNfqPthgTs54QP4VsJPQJOPFZnRJ5SJfHZ_br2W1KwJZb_N7toh0/exec';
+const API = 'https://script.google.com/macros/s/AKfycbwmel6PRxAGyVp2t0p0I0QaAtC-U_xRc3C5GbJixgPBpSlR3P1Abd1XNzx-q6MyX2w/exec';
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const MN = {Jan:'January',Feb:'February',Mar:'March',Apr:'April',May:'May',Jun:'June',Jul:'July',Aug:'August',Sep:'September',Oct:'October',Nov:'November',Dec:'December'};
 
@@ -433,27 +433,37 @@ function onMonthChange() { S.month = el('selMonth').value; if (S.data) renderAll
 async function fetchData() {
   el('btnRefresh').disabled = true;
   setStatus('loading', 'Connecting to Google Sheets…');
+
+  // AbortController for 20s timeout
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 20000);
+
   try {
     const cb = Date.now();
-    // Single API call — getSummary has everything getKPIs has, no need for two calls
-    const res  = await fetch(API + '?action=getSummary&year=' + S.year + '&cb=' + cb);
+    const res = await fetch(
+      API + '?action=getSummary&year=' + S.year + '&cb=' + cb,
+      { signal: controller.signal }
+    );
+    clearTimeout(timeout);
+
+    if (!res.ok) throw new Error('HTTP ' + res.status);
     const json = await res.json();
     if (!json.success) throw new Error(json.error || 'Fetch failed');
 
     const sd = json.data;
     S.sum = sd;
 
-    // Derive KPI data client-side from summary (avoids second sheet read)
-    const salesArr  = MONTHS.map(m => sd.revenues.netSales[m]        || 0);
-    const gpArr     = MONTHS.map(m => sd.grossProfit.amount[m]        || 0);
-    const cogsArr   = MONTHS.map(m => sd.cogs.total[m]                || 0);
-    const opexArr   = MONTHS.map(m => sd.opex.total[m]                || 0);
-    const niArr     = MONTHS.map(m => sd.netIncome.afterTax[m]        || 0);
-    const ytdSales  = sd.revenues.netSales.YTD        || 0;
-    const ytdGP     = sd.grossProfit.amount.YTD       || 0;
-    const ytdNI     = sd.netIncome.afterTax.YTD       || 0;
-    const ytdCOGS   = sd.cogs.total.YTD               || 0;
-    const ytdOpEx   = sd.opex.total.YTD               || 0;
+    // Derive KPI data client-side — no second API call needed
+    const salesArr = MONTHS.map(m => sd.revenues.netSales[m]     || 0);
+    const gpArr    = MONTHS.map(m => sd.grossProfit.amount[m]     || 0);
+    const cogsArr  = MONTHS.map(m => sd.cogs.total[m]             || 0);
+    const opexArr  = MONTHS.map(m => sd.opex.total[m]             || 0);
+    const niArr    = MONTHS.map(m => sd.netIncome.afterTax[m]     || 0);
+    const ytdSales = sd.revenues.netSales.YTD     || 0;
+    const ytdGP    = sd.grossProfit.amount.YTD    || 0;
+    const ytdNI    = sd.netIncome.afterTax.YTD    || 0;
+    const ytdCOGS  = sd.cogs.total.YTD            || 0;
+    const ytdOpEx  = sd.opex.total.YTD            || 0;
 
     S.data = {
       ytdSales, ytdGrossProfit: ytdGP, ytdNetIncome: ytdNI, ytdCOGS, ytdOpEx,
@@ -466,8 +476,14 @@ async function fetchData() {
     el('bottomRow').style.display = 'grid';
     setStatus('ok', '✔ Updated · ' + new Date().toLocaleTimeString('en-PH'));
     renderAll();
+
   } catch (e) {
-    setStatus('error', '⚠ ' + e.message);
+    clearTimeout(timeout);
+    if (e.name === 'AbortError') {
+      setStatus('error', '⚠ Timed out after 20s — Google Sheets is slow to respond. <button onclick="fetchData()" style="margin-left:8px;padding:3px 10px;border-radius:5px;border:1px solid currentColor;background:transparent;cursor:pointer;font-size:11px;font-weight:600;">Retry</button>');
+    } else {
+      setStatus('error', '⚠ ' + e.message + ' <button onclick="fetchData()" style="margin-left:8px;padding:3px 10px;border-radius:5px;border:1px solid currentColor;background:transparent;cursor:pointer;font-size:11px;font-weight:600;">Retry</button>');
+    }
   } finally {
     el('btnRefresh').disabled = false;
   }
