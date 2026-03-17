@@ -354,9 +354,6 @@ body{font-family:var(--font);background:var(--gray100);color:var(--gray900);font
     </div>
   </div>
 
-
-
-
 </div>
 
 <script>
@@ -376,7 +373,7 @@ const C = {
   comp:['#1d4ed8','#2563eb','#3b82f6','#60a5fa','#93c5fd','#bfdbfe']
 };
 
-const el = id => document.getElementById(id);
+const el  = id => document.getElementById(id);
 const peso = (n, compact) => {
   if (n == null || isNaN(n)) return '—';
   const a = Math.abs(n);
@@ -398,23 +395,26 @@ function getVals() {
     cogs:  isAll ? sum(d.monthlyTrend.cogs) : (d.monthlyTrend.cogs[i]  || 0)
   };
 }
+
 function getOpexBD() {
   const m = S.month, sd = S.sum, g = o => m === 'all' ? (o.YTD||0) : (o[m]||0);
   return sd ? {comp:g(sd.compensation.total), ga:g(sd.opex.gaExpenses), comm:g(sd.opex.totalCommissions)} : null;
 }
+
 function getCogsBD() {
   const m = S.month, sd = S.sum, g = o => m === 'all' ? (o.YTD||0) : (o[m]||0);
   return sd ? {mat:g(sd.cogs.materials),supp:g(sd.cogs.officeSuppliesDirect),merch:g(sd.cogs.merchandiseSold),furn:g(sd.cogs.officeFurniture),comm:g(sd.cogs.commissionsDir),other:g(sd.cogs.otherDirect)} : null;
 }
+
 function getCompD() {
   const m = S.month, sd = S.sum, g = o => m === 'all' ? (o.YTD||0) : (o[m]||0);
   return sd ? {sal:g(sd.compensation.salariesWages),all:g(sd.compensation.allowances),ot:g(sd.compensation.overtime),b13:g(sd.compensation.bonus13th),stat:g(sd.compensation.statutoryBen),sil:g(sd.compensation.sil)} : null;
 }
+
 function getGADetail() {
   const m = S.month, sd = S.sum;
   if (!sd || !sd.gaDetail) return null;
   const g = o => o ? (m === 'all' ? (o.YTD||0) : (o[m]||0)) : 0;
-  // Map all GA line items from the Apps Script data
   const items = {};
   Object.keys(sd.gaDetail).forEach(k => { items[k] = g(sd.gaDetail[k]); });
   return items;
@@ -427,6 +427,7 @@ function setView(v) {
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.toggle('active', t.id === 'tab-' + v));
   if (S.data) renderAll();
 }
+
 function onYearChange() { S.year = el('selYear').value; fetchData(true); }
 function onMonthChange() { S.month = el('selMonth').value; if (S.data) renderAll(); }
 
@@ -434,7 +435,6 @@ async function fetchData() {
   el('btnRefresh').disabled = true;
   setStatus('loading', 'Connecting to Google Sheets…');
 
-  // AbortController for 20s timeout
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 20000);
 
@@ -453,7 +453,6 @@ async function fetchData() {
     const sd = json.data;
     S.sum = sd;
 
-    // Derive KPI data client-side — no second API call needed
     const salesArr = MONTHS.map(m => sd.revenues.netSales[m]     || 0);
     const gpArr    = MONTHS.map(m => sd.grossProfit.amount[m]     || 0);
     const cogsArr  = MONTHS.map(m => sd.cogs.total[m]             || 0);
@@ -473,7 +472,7 @@ async function fetchData() {
     };
 
     el('periodHead').style.display = 'flex';
-    el('bottomRow').style.display = 'grid';
+    el('bottomRow').style.display  = 'grid';
     setStatus('ok', '✔ Updated · ' + new Date().toLocaleTimeString('en-PH'));
     renderAll();
 
@@ -488,6 +487,7 @@ async function fetchData() {
     el('btnRefresh').disabled = false;
   }
 }
+
 function setStatus(t, m) {
   const s = el('statusEl'); s.className = 'status ' + t;
   s.innerHTML = (t === 'loading' ? '<span class="spin"></span>&nbsp; ' : '') + m;
@@ -497,8 +497,8 @@ function renderAll() {
   const lbl = plbl();
   el('periodTitle').textContent = 'NAM Wholesale Trading — FY ' + S.year;
   el('periodBadge').textContent = lbl;
-  el('trendBadge').textContent = 'FY ' + S.year;
-  el('donutBadge').textContent = lbl;
+  el('trendBadge').textContent  = 'FY ' + S.year;
+  el('donutBadge').textContent  = lbl;
   renderKPIs(); renderTrend(); renderDonut();
   renderBonus();
   if (S.activeDrill) openDrill(S.activeDrill);
@@ -507,8 +507,8 @@ function renderAll() {
 /* ═══ KPI CARDS ═══ */
 function renderKPIs() {
   const v = getVals();
-  const gm = v.sales > 0 ? v.gp   / v.sales : 0;
-  const nm = v.sales > 0 ? v.ni   / v.sales : 0;
+  const gm  = v.sales > 0 ? v.gp   / v.sales : 0;
+  const nm  = v.sales > 0 ? v.ni   / v.sales : 0;
   const opx = v.sales > 0 ? v.opex / v.sales * 100 : 0;
 
   const cards = [
@@ -528,11 +528,11 @@ function renderKPIs() {
       change: v.ni >= 0 ? '▲ ' + pct(nm) + ' NM' : '▼ Net Loss', chCls: v.ni >= 0 ? 'ch-up' : 'ch-down',
       bar: Math.min(Math.abs(nm) * 300, 100) },
     (()=>{
-      const mt = 50000, at = mt*12;
+      const mt = 50000, at = mt * 12;
       const sd = S.sum, d2 = S.data;
-      const tp = MONTHS.reduce((s,m,i)=> s + (sd ? (sd.opex.totalCommissions[m]||0) : (d2.monthlyTrend.opex[i]*0.05)), 0);
-      const ap = at > 0 ? tp/at : 0;
-      const metC = MONTHS.filter((m,i)=> (sd ? (sd.opex.totalCommissions[m]||0) : (d2.monthlyTrend.opex[i]*0.05)) >= mt).length;
+      const tp = MONTHS.reduce((s,m,i) => s + (sd ? (sd.opex.totalCommissions[m]||0) : (d2.monthlyTrend.opex[i]*0.05)), 0);
+      const ap = at > 0 ? tp / at : 0;
+      const metC = MONTHS.filter((m,i) => (sd ? (sd.opex.totalCommissions[m]||0) : (d2.monthlyTrend.opex[i]*0.05)) >= mt).length;
       return { id:'bonus', cls:'kpi-purple', icon:'🎯', label:'Bonus Monitoring',
         value: (ap*100).toFixed(1)+'%', meta: metC + '/12 months met · Target: '+peso(at,true),
         change: tp >= at ? '✅ Annual Target Met!' : peso(at-tp,true)+' remaining', chCls: tp>=at?'ch-up':'ch-flat',
@@ -581,7 +581,6 @@ function openDrill(id) {
   };
   const c = cfg[id];
 
-  // Define available tabs per card
   const tabDefs = {
     sales: [{k:'chart',l:'📊 Chart'},{k:'table',l:'📋 Table'}],
     gp:    [{k:'chart',l:'📊 Chart'},{k:'table',l:'📋 Table'}],
@@ -631,7 +630,40 @@ function openDrill(id) {
     panel.scrollIntoView({behavior:'smooth', block:'nearest'});
   }, 60);
 }
+
 function setDrillTab(id, tab) { S.drillTab[id] = tab; openDrill(id); }
+
+/* ═══ BUILD STATS ═══ — THIS WAS THE MISSING FUNCTION DECLARATION */
+function buildStats(id) {
+  const v = getVals(), ob = getOpexBD() || {};
+  const gm = v.sales > 0 ? v.gp / v.sales : 0;
+  const nm = v.sales > 0 ? v.ni / v.sales : 0;
+  const map = {
+    sales: [{v:peso(v.sales,true),l:'Net Sales'},{v:peso(v.gp,true),l:'Gross Profit'},{v:pct(gm),l:'GM %'},{v:peso(v.ni,true),l:'Net Income'}],
+    gp:    [{v:peso(v.gp,true),l:'Gross Profit'},{v:peso(v.cogs,true),l:'Total COGS'},{v:pct(gm),l:'GM %'},{v:peso(v.sales,true),l:'Net Sales'}],
+    opex:  [{v:peso(v.opex,true),l:'Total OpEx'},{v:peso(ob.comp||0,true),l:'Compensation'},{v:peso(ob.ga||0,true),l:'G&A'},{v:peso(ob.comm||0,true),l:'Commissions'}],
+    ni:    [{v:peso(v.ni,true),l:'Net Income'},{v:peso(v.sales,true),l:'Revenue'},{v:peso(v.gp,true),l:'Gross Profit'},{v:pct(nm),l:'Net Margin'}],
+    bonus: (()=>{
+      const sd=S.sum, d2=S.data, mt=50000, at=mt*12;
+      const tp=MONTHS.reduce((s,m,i)=>s+(sd?(sd.opex.totalCommissions[m]||0):(d2.monthlyTrend.opex[i]*0.05)),0);
+      const metC=MONTHS.filter((m,i)=>(sd?(sd.opex.totalCommissions[m]||0):(d2.monthlyTrend.opex[i]*0.05))>=mt).length;
+      return [{v:peso(tp,true),l:'Total Progress'},{v:peso(at,true),l:'Annual Target'},{v:metC+'/12',l:'Months Met'},{v:((tp/at)*100).toFixed(1)+'%',l:'Achievement'}];
+    })(),
+    ga: (()=>{
+      const ob2 = getOpexBD() || {};
+      const gaTotal = ob2.ga || 0;
+      return [
+        {v:peso(gaTotal,true),l:'Total G&A'},
+        {v:peso(ob2.comp||0,true),l:'vs Compensation'},
+        {v:peso(ob2.comm||0,true),l:'vs Commissions'},
+        {v:((gaTotal/((ob2.comp||0)+(ob2.ga||0)+(ob2.comm||0)||1))*100).toFixed(1)+'%',l:'% of OpEx'}
+      ];
+    })()
+  };
+  return (map[id] || []).map(s =>
+    `<div class="dstat"><div class="dstat-val">${s.v}</div><div class="dstat-lbl">${s.l}</div></div>`
+  ).join('');
+}
 
 function buildOpexDrill() {
   const ob = getOpexBD() || {};
@@ -654,7 +686,6 @@ function buildOpexDrill() {
         </div>`).join('')}
     </div>`;
 
-  // Top stat tiles
   const statsHtml = `<div class="drill-stats" style="margin-bottom:16px;">
     <div class="dstat"><div class="dstat-val">${peso(total,true)}</div><div class="dstat-lbl">Total OpEx</div></div>
     <div class="dstat"><div class="dstat-val">${((ob.comp||0)/total*100).toFixed(1)}%</div><div class="dstat-lbl">Comp %</div></div>
@@ -662,7 +693,6 @@ function buildOpexDrill() {
     <div class="dstat"><div class="dstat-val">${((ob.comm||0)/total*100).toFixed(1)}%</div><div class="dstat-lbl">Comm %</div></div>
   </div>`;
 
-  // Chart/Table tabs for active sub
   const contentTabs = `<div class="drill-tabs" style="margin-bottom:16px;">
     <button class="dtab${S.opexSubTab!=='table'?' active':''}" onclick="setOpexSubTab('chart')">📊 Chart</button>
     <button class="dtab${S.opexSubTab==='table'?' active':''}" onclick="setOpexSubTab('table')">📋 Table</button>
@@ -677,6 +707,7 @@ function setOpexSub(sub) {
   S.opexSub = sub;
   if (S.activeDrill === 'opex') openDrill('opex');
 }
+
 function setOpexSubTab(tab) {
   S.opexSubTab = tab;
   if (S.activeDrill === 'opex') openDrill('opex');
@@ -702,11 +733,10 @@ function buildOpexSubBars() {
     const ga = getGADetail() || {};
     items = Object.entries(ga).map(([k,v])=>({l:gaLabel(k),v,c:gaColor(k)})).filter(i=>i.v>0).sort((a,b)=>b.v-a.v).slice(0,8);
   } else {
-    const ob = getOpexBD() || {};
     const sd = S.sum;
     items = [
-      {l:'Staff Commission',  v:sd?sd.opex.staffCommission.YTD||0:0,  c:C.blue2},
-      {l:'Sales Commission',  v:sd?sd.opex.salesCommission.YTD||0:0,  c:C.orange2}
+      {l:'Staff Commission', v:sd?sd.opex.staffCommission.YTD||0:0, c:C.blue2},
+      {l:'Sales Commission', v:sd?sd.opex.salesCommission.YTD||0:0, c:C.orange2}
     ].sort((a,b)=>b.v-a.v);
   }
   const max = Math.max(...items.map(i=>i.v),1), tot = items.reduce((s,i)=>s+i.v,0)||1;
@@ -772,7 +802,6 @@ function initOpexSubChart(sub) {
       {label:'Total OpEx', data:d.opex, type:'line', borderColor:C.orange2, backgroundColor:'transparent', tension:.4, pointRadius:3, borderWidth:2, borderDash:[5,3]}
     ]}, options:opts});
   } else {
-    const commData = sd ? MONTHS.map(m=>sd.opex.totalCommissions[m]||0) : d.opex.map(v=>v*0.08);
     const staffData = sd ? MONTHS.map(m=>sd.opex.staffCommission[m]||0) : [];
     const salesData = sd ? MONTHS.map(m=>sd.opex.salesCommission[m]||0) : [];
     S.charts.opexSub = new Chart(ctx, {type:'bar', data:{labels:MONTHS, datasets:[
@@ -781,38 +810,8 @@ function initOpexSubChart(sub) {
     ]}, options:opts});
   }
 }
-  const v = getVals(), ob = getOpexBD() || {};
-  const gm = v.sales > 0 ? v.gp / v.sales : 0;
-  const nm = v.sales > 0 ? v.ni / v.sales : 0;
-  const map = {
-    sales: [{v:peso(v.sales,true),l:'Net Sales'},{v:peso(v.gp,true),l:'Gross Profit'},{v:pct(gm),l:'GM %'},{v:peso(v.ni,true),l:'Net Income'}],
-    gp:    [{v:peso(v.gp,true),l:'Gross Profit'},{v:peso(v.cogs,true),l:'Total COGS'},{v:pct(gm),l:'GM %'},{v:peso(v.sales,true),l:'Net Sales'}],
-    opex:  [{v:peso(v.opex,true),l:'Total OpEx'},{v:peso(ob.comp||0,true),l:'Compensation'},{v:peso(ob.ga||0,true),l:'G&A'},{v:peso(ob.comm||0,true),l:'Commissions'}],
-    ni:    [{v:peso(v.ni,true),l:'Net Income'},{v:peso(v.sales,true),l:'Revenue'},{v:peso(v.gp,true),l:'Gross Profit'},{v:pct(nm),l:'Net Margin'}],
-    bonus: (()=>{
-      const sd=S.sum,d2=S.data,mt=50000,at=mt*12;
-      const tp=MONTHS.reduce((s,m,i)=>s+(sd?(sd.opex.totalCommissions[m]||0):(d2.monthlyTrend.opex[i]*0.05)),0);
-      const metC=MONTHS.filter((m,i)=>(sd?(sd.opex.totalCommissions[m]||0):(d2.monthlyTrend.opex[i]*0.05))>=mt).length;
-      return [{v:peso(tp,true),l:'Total Progress'},{v:peso(at,true),l:'Annual Target'},{v:metC+'/12',l:'Months Met'},{v:((tp/at)*100).toFixed(1)+'%',l:'Achievement'}];
-    })(),
-    ga: (()=>{
-      const ob = getOpexBD() || {};
-      const ga = getGADetail() || {};
-      const gaTotal = ob.ga || 0;
-      const top3 = Object.entries(ga).filter(([k])=>k!=='total').sort((a,b)=>b[1]-a[1]).slice(0,1);
-      return [
-        {v:peso(gaTotal,true),l:'Total G&A'},
-        {v:peso(ob.comp||0,true),l:'vs Compensation'},
-        {v:peso(ob.comm||0,true),l:'vs Commissions'},
-        {v:((gaTotal/((ob.comp||0)+(ob.ga||0)+(ob.comm||0)||1))*100).toFixed(1)+'%',l:'% of OpEx'}
-      ];
-    })()
-  };
-  return (map[id] || []).map(s => `<div class="dstat"><div class="dstat-val">${s.v}</div><div class="dstat-lbl">${s.l}</div></div>`).join('');
-}
 
 function buildViz(id) {
-  // Chart on left, ranked bars on right
   const chartHtml = `<div class="drill-chart"><canvas id="drillCanvas"></canvas></div>`;
 
   if (id === 'sales') {
@@ -834,7 +833,6 @@ function buildViz(id) {
     return `<div class="drill-viz-row">${chartHtml}<div class="drill-viz-bars"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--gray400);margin-bottom:10px;">Ranked by Cost</div>${bars}</div></div>`;
   }
   if (id === 'opex') {
-    const ob = getOpexBD() || {};
     const cd = getCompD() || {};
     const compItems = [
       {n:'Salaries & Wages',v:cd.sal,c:C.comp[0]},{n:'Allowances',v:cd.all,c:C.comp[1]},
@@ -851,7 +849,6 @@ function buildViz(id) {
   }
   if (id === 'ga') {
     const ga = getGADetail();
-    // fallback: show monthly trend bars
     if (!ga) return `<div style="width:100%">${chartHtml}</div>`;
     const items = Object.entries(ga)
       .map(([k,v])=>({l:gaLabel(k),v,c:gaColor(k)}))
@@ -867,7 +864,6 @@ function buildViz(id) {
       </div><div class="mb-track"><div class="mb-fill" style="width:${(it.v/max*100).toFixed(1)}%;background:${it.c}"></div></div></div>`).join('');
     return `<div class="drill-viz-row">${chartHtml}<div class="drill-viz-bars"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--gray400);margin-bottom:10px;">Top G&A Items</div>${bars}</div></div>`;
   }
-  // ni / bonus
   return `<div style="width:100%">${chartHtml}</div>`;
 }
 
@@ -875,46 +871,40 @@ function buildDrillTable(id) {
   const d = S.data.monthlyTrend;
   const H = cols => '<thead><tr>' + cols.map((c,i) => `<th${i ? ' class="num"' : ''}>${c}</th>`).join('') + '</tr></thead>';
   const wrap = html => `<div class="tbl-scroll">${html}</div>`;
+
   if (id === 'sales') {
     return buildISFullTable();
   }
   if (id === 'gp' && S.sum) {
     const sd = S.sum;
-    const items = [{l:'Materials',d:sd.cogs.materials},{l:'Office Supplies',d:sd.cogs.officeSuppliesDirect},{l:'Merchandise Sold',d:sd.cogs.merchandiseSold},{l:'Office Furniture',d:sd.cogs.officeFurniture},{l:'Commissions (Dir)',d:sd.cogs.commissionsDir},{l:'Other Direct',d:sd.cogs.otherDirect}];
+    const items = [
+      {l:'Materials',d:sd.cogs.materials},{l:'Office Supplies',d:sd.cogs.officeSuppliesDirect},
+      {l:'Merchandise Sold',d:sd.cogs.merchandiseSold},{l:'Office Furniture',d:sd.cogs.officeFurniture},
+      {l:'Commissions (Dir)',d:sd.cogs.commissionsDir},{l:'Other Direct',d:sd.cogs.otherDirect}
+    ];
     return wrap('<table class="data-table">' + H(['COGS ITEM',...MONTHS,'YTD']) +
       '<tbody>' + items.map(it => `<tr><td>${it.l}</td>${MONTHS.map(m=>`<td class="num amt-neg">${peso(it.d[m]||0)}</td>`).join('')}<td class="num amt-neg">${peso(it.d.YTD||0)}</td></tr>`).join('') +
       `<tr class="tot"><td>Total COGS</td>${MONTHS.map(m=>`<td class="num">${peso(sd.cogs.total[m]||0)}</td>`).join('')}<td class="num">${peso(sd.cogs.total.YTD||0)}</td></tr></tbody></table>`);
   }
   if (id === 'opex' && S.sum) {
     const sd = S.sum;
-    const items = [{l:'Salaries & Wages',d:sd.compensation.salariesWages},{l:'Allowances',d:sd.compensation.allowances},{l:'OT / Holidays',d:sd.compensation.overtime},{l:'13th Month / Bonus',d:sd.compensation.bonus13th},{l:'Statutory Benefits',d:sd.compensation.statutoryBen},{l:'Service Incentive',d:sd.compensation.sil}];
+    const items = [
+      {l:'Salaries & Wages',d:sd.compensation.salariesWages},{l:'Allowances',d:sd.compensation.allowances},
+      {l:'OT / Holidays',d:sd.compensation.overtime},{l:'13th Month / Bonus',d:sd.compensation.bonus13th},
+      {l:'Statutory Benefits',d:sd.compensation.statutoryBen},{l:'Service Incentive',d:sd.compensation.sil}
+    ];
     return wrap('<table class="data-table">' + H(['COMP ITEM',...MONTHS,'YTD']) +
       '<tbody>' + items.map(it => `<tr><td>${it.l}</td>${MONTHS.map(m=>`<td class="num">${peso(it.d[m]||0)}</td>`).join('')}<td class="num">${peso(it.d.YTD||0)}</td></tr>`).join('') +
       `<tr class="tot"><td>Total Compensation</td>${MONTHS.map(m=>`<td class="num">${peso(sd.compensation.total[m]||0)}</td>`).join('')}<td class="num">${peso(sd.compensation.total.YTD||0)}</td></tr></tbody></table>`);
   }
   if (id === 'bonus') return buildBonusTable();
   if (id === 'ga') return buildGATable();
-  return wrap('<table class="data-table">' + H(['MONTH','Net Sales','COGS','OpEx','Net Income']) +
-    '<tbody>' + MONTHS.map((m,i) => `<tr><td>${m}</td><td class="num">${peso(d.sales[i])}</td><td class="num amt-neg">${peso(d.cogs[i])}</td><td class="num amt-neg">${peso(d.opex[i])}</td><td class="num ${d.netIncome[i]>=0?'vp':'vn'}">${peso(d.netIncome[i])}</td></tr>`).join('') +
-    `<tr class="tot"><td>YTD</td><td class="num">${peso(sum(d.sales))}</td><td class="num">${peso(sum(d.cogs))}</td><td class="num">${peso(sum(d.opex))}</td><td class="num">${peso(sum(d.netIncome))}</td></tr></tbody></table>`);
-}
 
-function buildCompTable() {
-  if (!S.sum) return '<p style="color:var(--gray500);font-size:12px;padding:12px;">No summary data yet.</p>';
-  const sd = S.sum;
-  const items = [
-    {l:'Salaries & Wages',   d:sd.compensation.salariesWages},
-    {l:'Allowances',         d:sd.compensation.allowances},
-    {l:'Overtime / Holidays',d:sd.compensation.overtime},
-    {l:'13th Month / Bonus', d:sd.compensation.bonus13th},
-    {l:'Statutory Benefits', d:sd.compensation.statutoryBen},
-    {l:'Service Incentive',  d:sd.compensation.sil}
-  ];
-  const H = cols => '<thead><tr>' + cols.map((c,i) => `<th${i?' class="num"':''}>${c}</th>`).join('') + '</tr></thead>';
-  return `<div class="tbl-scroll"><table class="data-table">${H(['COMP ITEM',...MONTHS,'YTD'])}<tbody>` +
-    items.map(it => `<tr><td>${it.l}</td>${MONTHS.map(m=>`<td class="num">${peso(it.d[m]||0)}</td>`).join('')}<td class="num">${peso(it.d.YTD||0)}</td></tr>`).join('') +
-    `<tr class="tot"><td>Total Compensation</td>${MONTHS.map(m=>`<td class="num">${peso(sd.compensation.total[m]||0)}</td>`).join('')}<td class="num">${peso(sd.compensation.total.YTD||0)}</td></tr>` +
-    '</tbody></table></div>';
+  return wrap('<table class="data-table">' + H(['MONTH','Net Sales','COGS','OpEx','Net Income']) +
+    '<tbody>' + MONTHS.map((m,i) =>
+      `<tr><td>${m}</td><td class="num">${peso(d.sales[i])}</td><td class="num amt-neg">${peso(d.cogs[i])}</td><td class="num amt-neg">${peso(d.opex[i])}</td><td class="num ${d.netIncome[i]>=0?'vp':'vn'}">${peso(d.netIncome[i])}</td></tr>`
+    ).join('') +
+    `<tr class="tot"><td>YTD</td><td class="num">${peso(sum(d.sales))}</td><td class="num">${peso(sum(d.cogs))}</td><td class="num">${peso(sum(d.opex))}</td><td class="num">${peso(sum(d.netIncome))}</td></tr></tbody></table>`);
 }
 
 function buildISFullTable() {
@@ -924,7 +914,7 @@ function buildISFullTable() {
   const row = (lbl, arr, cls='', neg=false) => {
     const cells = arr.map(v => `<td class="num${neg&&v>0?' amt-neg':''}">${peso(v)}</td>`).join('');
     const ytdV = sum(arr);
-    return `<tr${cls?` class="${cls}"`:''}}><td>${lbl}</td>${cells}<td class="num${neg&&ytdV>0?' amt-neg':''}">${peso(ytdV)}</td></tr>`;
+    return `<tr${cls?` class="${cls}"`:''}><td>${lbl}</td>${cells}<td class="num${neg&&ytdV>0?' amt-neg':''}">${peso(ytdV)}</td></tr>`;
   };
   return `<div class="tbl-scroll"><table class="data-table">${H(['DESCRIPTION',...MONTHS,'YTD'])}<tbody>` +
     sec('── Revenues') + row('Net Sales', d.sales) +
@@ -938,77 +928,58 @@ function initDrillChart(id) {
   const d = S.data.monthlyTrend;
   const ctx = el('drillCanvas');
   if (!ctx) return;
-  if (S.charts.drill)  { S.charts.drill.destroy();  delete S.charts.drill; }
+  if (S.charts.drill) { S.charts.drill.destroy(); delete S.charts.drill; }
 
   const lineOpts = () => ({responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{labels:{color:C.text,font:{size:11},boxWidth:10,padding:12}},tooltip:{backgroundColor:'#fff',borderColor:C.border,borderWidth:1.5,titleColor:C.text,bodyColor:C.muted,padding:10,cornerRadius:8,callbacks:{label:c=>' '+c.dataset.label+': '+peso(c.raw)}}},scales:{x:{grid:{display:false},ticks:{color:C.muted,font:{size:10}}},y:{grid:{color:'#f1f5f9'},ticks:{color:C.muted,font:{size:10},callback:v=>peso(v,true)}}}});
   const barOpts  = () => ({responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:C.text,font:{size:11},boxWidth:10,padding:12}},tooltip:{backgroundColor:'#fff',borderColor:C.border,borderWidth:1.5,titleColor:C.text,bodyColor:C.muted,padding:10,cornerRadius:8,callbacks:{label:c=>' '+c.dataset.label+': '+peso(c.raw)}}},scales:{x:{grid:{display:false},ticks:{color:C.muted,font:{size:10}}},y:{grid:{color:'#f1f5f9'},ticks:{color:C.muted,font:{size:10},callback:v=>peso(v,true)}}}});
 
   if (id === 'sales') {
     const opts = lineOpts();
-    // add zero reference line
-    opts.scales.y.grid = { color: ctx2 => ctx2.tick.value === 0 ? 'rgba(100,116,139,.4)' : '#f1f5f9', lineWidth: ctx2 => ctx2.tick.value === 0 ? 2 : 1 };
-    opts.scales.y.border = { dash: [4,2] };
-    S.charts.drill = new Chart(ctx, {type:'line', data:{labels:MONTHS,datasets:[
+    S.charts.drill = new Chart(ctx, {type:'line', data:{labels:MONTHS, datasets:[
       {
-        label:'Net Sales',
-        data: d.sales,
-        borderColor: C.blue2,
+        label:'Net Sales', data: d.sales, borderColor: C.blue2,
         backgroundColor: (ctx2) => {
-          const chart = ctx2.chart;
-          const {ctx: c2, chartArea} = chart;
+          const chart = ctx2.chart, {ctx: c2, chartArea} = chart;
           if (!chartArea) return C.blueA;
           const grad = c2.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
-          grad.addColorStop(0, 'rgba(59,130,246,.18)');
-          grad.addColorStop(1, 'rgba(59,130,246,.01)');
+          grad.addColorStop(0, 'rgba(59,130,246,.18)'); grad.addColorStop(1, 'rgba(59,130,246,.01)');
           return grad;
         },
-        fill: 'origin', tension:.4, pointRadius:4, pointHoverRadius:6,
-        borderWidth:2.5, pointBackgroundColor:'#fff', pointBorderWidth:2, pointBorderColor:C.blue2
+        fill:'origin', tension:.4, pointRadius:4, pointHoverRadius:6, borderWidth:2.5,
+        pointBackgroundColor:'#fff', pointBorderWidth:2, pointBorderColor:C.blue2
       },
       {
-        label:'Gross Profit',
-        data: d.grossProfit,
-        borderColor: C.green2,
+        label:'Gross Profit', data: d.grossProfit, borderColor: C.green2,
         backgroundColor: (ctx2) => {
-          const chart = ctx2.chart;
-          const {ctx: c2, chartArea} = chart;
+          const chart = ctx2.chart, {ctx: c2, chartArea} = chart;
           if (!chartArea) return C.greenA;
           const grad = c2.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
-          grad.addColorStop(0, 'rgba(34,197,94,.15)');
-          grad.addColorStop(1, 'rgba(34,197,94,.01)');
+          grad.addColorStop(0, 'rgba(34,197,94,.15)'); grad.addColorStop(1, 'rgba(34,197,94,.01)');
           return grad;
         },
-        fill: 'origin', tension:.4, pointRadius:4, pointHoverRadius:6,
-        borderWidth:2.5, pointBackgroundColor:'#fff', pointBorderWidth:2, pointBorderColor:C.green2
+        fill:'origin', tension:.4, pointRadius:4, pointHoverRadius:6, borderWidth:2.5,
+        pointBackgroundColor:'#fff', pointBorderWidth:2, pointBorderColor:C.green2
       },
       {
-        label:'Net Income',
-        data: d.netIncome,
-        borderColor: C.blue2,
-        backgroundColor: 'transparent',
-        fill: false, tension:.4, pointRadius:4, pointHoverRadius:6,
+        label:'Net Income', data: d.netIncome, borderColor: C.teal2,
+        backgroundColor: 'transparent', fill: false, tension:.4, pointRadius:5, pointHoverRadius:6,
         borderWidth:2, borderDash:[6,4],
         pointBackgroundColor: d.netIncome.map(v => v >= 0 ? C.green2 : C.red2),
         pointBorderColor:     d.netIncome.map(v => v >= 0 ? C.green2 : C.red2),
-        pointBorderWidth: 2, pointRadius: 5,
-        segment: {
-          borderColor: ctx2 => {
-            const v0 = ctx2.p0.parsed.y, v1 = ctx2.p1.parsed.y;
-            return (v0 < 0 || v1 < 0) ? C.red2 : C.teal2;
-          }
-        }
+        pointBorderWidth: 2,
+        segment: { borderColor: ctx2 => { const v0=ctx2.p0.parsed.y, v1=ctx2.p1.parsed.y; return (v0<0||v1<0)?C.red2:C.teal2; } }
       }
     ]}, options:opts});
     return;
   }
   if (id === 'gp') {
     const b = getCogsBD() || {};
-    S.charts.drill = new Chart(ctx, {type:'doughnut',data:{labels:['Materials','Office Supp.','Merchandise','Furniture','Commissions','Other'],datasets:[{data:[b.mat||0,b.supp||0,b.merch||0,b.furn||0,b.comm||0,b.other||0],backgroundColor:[C.blue2,C.green2,C.orange2,C.teal2,C.red2,'#8b5cf6'],borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,padding:8}},tooltip:{callbacks:{label:c=>' '+c.label+': '+peso(c.raw)}}}}});
+    S.charts.drill = new Chart(ctx, {type:'doughnut', data:{labels:['Materials','Office Supp.','Merchandise','Furniture','Commissions','Other'],datasets:[{data:[b.mat||0,b.supp||0,b.merch||0,b.furn||0,b.comm||0,b.other||0],backgroundColor:[C.blue2,C.green2,C.orange2,C.teal2,C.red2,'#8b5cf6'],borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,padding:8}},tooltip:{callbacks:{label:c=>' '+c.label+': '+peso(c.raw)}}}}});
     return;
   }
   if (id === 'opex') {
     const ob = getOpexBD() || {};
-    S.charts.drill = new Chart(ctx, {type:'doughnut',data:{labels:['Compensation','G&A Expenses','Commissions'],datasets:[{data:[ob.comp||0,ob.ga||0,ob.comm||0],backgroundColor:[C.blue2,C.green2,C.orange2],borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,padding:8}},tooltip:{callbacks:{label:c=>' '+c.label+': '+peso(c.raw)}}}}});
+    S.charts.drill = new Chart(ctx, {type:'doughnut', data:{labels:['Compensation','G&A Expenses','Commissions'],datasets:[{data:[ob.comp||0,ob.ga||0,ob.comm||0],backgroundColor:[C.blue2,C.green2,C.orange2],borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,padding:8}},tooltip:{callbacks:{label:c=>' '+c.label+': '+peso(c.raw)}}}}});
     return;
   }
   if (id === 'ni') {
@@ -1016,38 +987,24 @@ function initDrillChart(id) {
       type:'bar',
       data:{labels:MONTHS, datasets:[
         {
-          label:'Net Income',
-          data: d.netIncome,
+          label:'Net Income', data: d.netIncome,
           backgroundColor: d.netIncome.map(v => v >= 0 ? 'rgba(34,197,94,.35)' : 'rgba(239,68,68,.3)'),
           borderColor:     d.netIncome.map(v => v >= 0 ? C.green2 : C.red2),
-          borderWidth: 2,
-          borderRadius: 6,
-          borderSkipped: false,
-          yAxisID: 'yNI',
-          order: 2,
-          barPercentage: 0.7,
-          categoryPercentage: 0.8
+          borderWidth:2, borderRadius:6, borderSkipped:false,
+          yAxisID:'yNI', order:2, barPercentage:0.7, categoryPercentage:0.8
         },
         {
-          label:'Net Sales',
-          data: d.sales,
-          type:'line',
-          borderColor: C.blue2,
+          label:'Net Sales', data: d.sales, type:'line', borderColor: C.blue2,
           backgroundColor: (ctx2) => {
-            const chart = ctx2.chart;
-            const {ctx: c2, chartArea} = chart;
+            const chart = ctx2.chart, {ctx: c2, chartArea} = chart;
             if (!chartArea) return 'transparent';
             const grad = c2.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
-            grad.addColorStop(0, 'rgba(59,130,246,.12)');
-            grad.addColorStop(1, 'rgba(59,130,246,.01)');
+            grad.addColorStop(0, 'rgba(59,130,246,.12)'); grad.addColorStop(1, 'rgba(59,130,246,.01)');
             return grad;
           },
-          fill: 'origin',
-          tension:.4, pointRadius:4, pointHoverRadius:6,
-          borderWidth:2.5,
+          fill:'origin', tension:.4, pointRadius:4, pointHoverRadius:6, borderWidth:2.5,
           pointBackgroundColor:'#fff', pointBorderWidth:2, pointBorderColor:C.blue2,
-          yAxisID: 'ySales',
-          order: 1
+          yAxisID:'ySales', order:1
         }
       ]},
       options:{
@@ -1055,28 +1012,15 @@ function initDrillChart(id) {
         interaction:{ mode:'index', intersect:false },
         plugins:{
           legend:{ labels:{ color:C.text, font:{size:11}, boxWidth:10, padding:14 } },
-          tooltip:{
-            backgroundColor:'#fff', borderColor:C.border, borderWidth:1.5,
-            titleColor:C.text, bodyColor:C.muted, padding:10, cornerRadius:8,
-            callbacks:{ label: c => ' ' + c.dataset.label + ': ' + peso(c.raw) }
-          }
+          tooltip:{ backgroundColor:'#fff', borderColor:C.border, borderWidth:1.5, titleColor:C.text, bodyColor:C.muted, padding:10, cornerRadius:8, callbacks:{ label: c => ' ' + c.dataset.label + ': ' + peso(c.raw) } }
         },
         scales:{
-          x:{ grid:{ display:false }, ticks:{ color:C.muted, font:{size:10} } },
-          ySales:{
-            position:'left',
-            grid:{ color:'#f1f5f9' },
-            ticks:{ color:C.blue2, font:{size:10}, callback: v => peso(v,true) }
-          },
+          x:{ grid:{display:false}, ticks:{color:C.muted, font:{size:10}} },
+          ySales:{ position:'left', grid:{color:'#f1f5f9'}, ticks:{color:C.blue2, font:{size:10}, callback: v => peso(v,true)} },
           yNI:{
-            position:'right',
-            grid:{ drawOnChartArea:false },
-            ticks:{ color:C.muted, font:{size:10}, callback: v => peso(v,true) },
-            afterDataLimits(scale) {
-              const abs = Math.max(Math.abs(scale.min), Math.abs(scale.max));
-              scale.min = -abs * 1.1;
-              scale.max =  abs * 1.1;
-            }
+            position:'right', grid:{drawOnChartArea:false},
+            ticks:{color:C.muted, font:{size:10}, callback: v => peso(v,true)},
+            afterDataLimits(scale) { const abs=Math.max(Math.abs(scale.min),Math.abs(scale.max)); scale.min=-abs*1.1; scale.max=abs*1.1; }
           }
         }
       }
@@ -1120,15 +1064,13 @@ function gaColor(k) { const keys = Object.keys(GA_LABELS); return GA_COLORS_LIST
 function buildGATable() {
   const sd = S.sum;
   if (!sd || !sd.gaDetail) {
-    // Fallback: show monthly GA totals only
     const gaMonthly = MONTHS.map(m => sd ? (sd.opex.gaExpenses[m]||0) : 0);
     const H2 = '<thead><tr><th>MONTH</th><th class="num">G&A TOTAL</th><th class="num">vs Total OpEx</th></tr></thead>';
     const rows = MONTHS.map((m,i) => `<tr><td>${m}</td><td class="num">${peso(gaMonthly[i])}</td><td class="num">${peso(S.data.monthlyTrend.opex[i])}</td></tr>`).join('');
     return `<div class="tbl-scroll"><table class="data-table">${H2}<tbody>${rows}</tbody></table></div>
       <div style="margin-top:14px;padding:14px 16px;background:#eef2ff;border:1.5px solid #c7d2fe;border-radius:8px;font-size:12px;color:#4338ca;">
-        <strong>⚠️ Apps Script Update Needed</strong> — To see full G&A line items, add <code>gaDetail</code> to your <code>getSummary</code> response. See instructions below.
-      </div>
-      ${buildGAScriptInstructions()}`;
+        <strong>⚠️ Apps Script Update Needed</strong> — To see full G&A line items, add <code>gaDetail</code> to your <code>getSummary</code> response.
+      </div>`;
   }
 
   const items = Object.entries(sd.gaDetail)
@@ -1145,88 +1087,45 @@ function buildGATable() {
   return `<div class="tbl-scroll"><table class="data-table">${H2}<tbody>${rows}${totRow}</tbody></table></div>`;
 }
 
-function buildGAScriptInstructions() {
-  return `<div style="margin-top:14px;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:8px;padding:16px 18px;font-size:11.5px;color:#334155;line-height:1.7;">
-    <div style="font-weight:700;font-size:13px;color:#0f172a;margin-bottom:10px;">📋 How to add G&A Detail to your Apps Script</div>
-    <p>In your <strong>getSummary</strong> function, inside the returned object, add a <code>gaDetail</code> key like this:</p>
-    <pre style="background:#1e293b;color:#e2e8f0;padding:12px 14px;border-radius:6px;font-size:11px;overflow-x:auto;margin-top:8px;">gaDetail: {
-  postage:        getRowByMonth(sheet, ROW_POSTAGE),
-  utilities:      getRowByMonth(sheet, ROW_UTILITIES),
-  rental:         getRowByMonth(sheet, ROW_RENTAL),
-  officeSupplies: getRowByMonth(sheet, ROW_OFFICE_SUPPLIES),
-  officeMaint:    getRowByMonth(sheet, ROW_OFFICE_MAINT),
-  vehicleMaint:   getRowByMonth(sheet, ROW_VEHICLE_MAINT),
-  carRental:      getRowByMonth(sheet, ROW_CAR_RENTAL),
-  advertising:    getRowByMonth(sheet, ROW_ADVERTISING),
-  representation: getRowByMonth(sheet, ROW_REPRESENTATION),
-  meals:          getRowByMonth(sheet, ROW_MEALS),
-  taxesLicenses:  getRowByMonth(sheet, ROW_TAXES),
-  professional:   getRowByMonth(sheet, ROW_PROFESSIONAL),
-  miscellaneous:  getRowByMonth(sheet, ROW_MISC),
-  // ... add all your G&A rows
-}</pre>
-    <p style="margin-top:10px;">Where <code>getRowByMonth</code> returns an object like <code>{Jan:580, Feb:580, ..., YTD:6960}</code>.<br/>
-    Each key name must match the labels in the dashboard (see GA_LABELS in the HTML).</p>
-  </div>`;
-}
 function mkLineOpts() { return {responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{labels:{color:C.text,font:{size:11},boxWidth:10,padding:12}},tooltip:{backgroundColor:'#fff',borderColor:C.border,borderWidth:1.5,titleColor:C.text,bodyColor:C.muted,padding:10,cornerRadius:8,callbacks:{label:c=>' '+c.dataset.label+': '+peso(c.raw)}}},scales:{x:{grid:{display:false},ticks:{color:C.muted,font:{size:10}}},y:{grid:{color:'#f1f5f9'},ticks:{color:C.muted,font:{size:10},callback:v=>peso(v,true)}}}}; }
 function mkBarOpts()  { return {responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:C.text,font:{size:11},boxWidth:10,padding:12}},tooltip:{backgroundColor:'#fff',borderColor:C.border,borderWidth:1.5,titleColor:C.text,bodyColor:C.muted,padding:10,cornerRadius:8,callbacks:{label:c=>' '+c.dataset.label+': '+peso(c.raw)}}},scales:{x:{grid:{display:false},ticks:{color:C.muted,font:{size:10}}},y:{grid:{color:'#f1f5f9'},ticks:{color:C.muted,font:{size:10},callback:v=>peso(v,true)}}}}; }
 const dc = id => { if (S.charts[id]) { S.charts[id].destroy(); delete S.charts[id]; } };
 
 function renderTrend() {
   const d = S.data.monthlyTrend; dc('chartTrend');
-  S.charts.chartTrend = new Chart(el('chartTrend'), {type:'line', data:{labels:MONTHS,datasets:[{label:'Net Sales',data:d.sales,borderColor:C.blue2,backgroundColor:C.blueA,fill:true,tension:.4,pointRadius:3,borderWidth:2},{label:'Gross Profit',data:d.grossProfit,borderColor:C.green2,backgroundColor:C.greenA,fill:true,tension:.4,pointRadius:3,borderWidth:2},{label:'Net Income',data:d.netIncome,borderColor:C.teal2,backgroundColor:'transparent',fill:false,tension:.4,pointRadius:3,borderWidth:2,borderDash:[5,3]}]}, options:mkLineOpts()});
+  S.charts.chartTrend = new Chart(el('chartTrend'), {
+    type:'line',
+    data:{labels:MONTHS, datasets:[
+      {label:'Net Sales',   data:d.sales,       borderColor:C.blue2,  backgroundColor:C.blueA,  fill:true, tension:.4, pointRadius:3, borderWidth:2},
+      {label:'Gross Profit',data:d.grossProfit, borderColor:C.green2, backgroundColor:C.greenA, fill:true, tension:.4, pointRadius:3, borderWidth:2},
+      {label:'Net Income',  data:d.netIncome,   borderColor:C.teal2,  backgroundColor:'transparent', fill:false, tension:.4, pointRadius:3, borderWidth:2, borderDash:[5,3]}
+    ]},
+    options:mkLineOpts()
+  });
 }
+
 function renderDonut() {
   const v = getVals(), gm = v.sales > 0 ? v.gp / v.sales : 0;
   el('donutPct').textContent = (gm * 100).toFixed(1) + '%';
   const fc = gm >= .3 ? C.green2 : gm >= .1 ? C.teal2 : C.orange2;
   el('donutPct').style.color = fc;
   dc('chartDonut');
-  S.charts.chartDonut = new Chart(el('chartDonut'), {type:'doughnut',data:{labels:['Gross Margin','COGS %'],datasets:[{data:[Math.max(0,gm*100),Math.max(0,(1-gm)*100)],backgroundColor:[fc,'#e2e8f0'],borderColor:['#fff','#fff'],borderWidth:3}]},options:{responsive:false,cutout:'72%',plugins:{legend:{display:false},tooltip:{enabled:false}}}});
-  el('donutLegend').innerHTML = [{dot:fc,n:'Gross Margin',v:pct(gm)},{dot:'#e2e8f0',n:'COGS Share',v:pct(1-gm)},{dot:C.teal2,n:'Net Income',v:peso(v.ni,true)}].map(r=>`<div class="dl-row"><span class="dl-dot" style="background:${r.dot}"></span><span class="dl-name">${r.n}</span><span class="dl-val">${r.v}</span></div>`).join('');
-}
-function renderISTable() {
-  const d = S.data.monthlyTrend;
-  const sec = l => `<tr style="background:var(--blue-bg)"><td colspan="${MONTHS.length+2}" style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--blue);padding:7px 12px;">${l}</td></tr>`;
-  const row = (l,a,tot=false,neg=false) => `<tr${tot?' class="tot"':''}><td>${l}</td>${a.map(v=>`<td class="num${neg&&v>0?' amt-neg':''}">${peso(v)}</td>`).join('')}<td class="num${neg&&sum(a)>0?' amt-neg':''}">${peso(sum(a))}</td></tr>`;
-  el('isTable').innerHTML = '<thead><tr><th>DESCRIPTION</th>'+MONTHS.map(m=>`<th class="num">${m}</th>`).join('')+'<th class="num">YTD</th></tr></thead><tbody>'+sec('── Revenues')+row('Net Sales',d.sales)+sec('── Direct Costs (COGS)')+row('Total COGS',d.cogs,false,true)+row('Gross Profit',d.grossProfit,true)+sec('── Operating Expenses')+row('Total OpEx',d.opex,false,true)+row('Net Income (Before Tax)',d.netIncome,true)+'</tbody>';
-}
-function renderCOGSTable() {
-  if (!S.sum) return;
-  const sd = S.sum;
-  const items = [{l:'Materials',d:sd.cogs.materials},{l:'Office Supplies',d:sd.cogs.officeSuppliesDirect},{l:'Merchandise Sold',d:sd.cogs.merchandiseSold},{l:'Office Furniture',d:sd.cogs.officeFurniture},{l:'Commissions (Dir.)',d:sd.cogs.commissionsDir},{l:'Other Direct',d:sd.cogs.otherDirect}];
-  el('cogsTable').innerHTML = '<thead><tr><th>COGS ITEM</th>'+MONTHS.map(m=>`<th class="num">${m}</th>`).join('')+'<th class="num">YTD</th></tr></thead><tbody>'+items.map(it=>`<tr><td>${it.l}</td>${MONTHS.map(m=>`<td class="num amt-neg">${peso(it.d[m]||0)}</td>`).join('')}<td class="num amt-neg">${peso(it.d.YTD||0)}</td></tr>`).join('')+`<tr class="tot"><td>Total COGS</td>${MONTHS.map(m=>`<td class="num">${peso(sd.cogs.total[m]||0)}</td>`).join('')}<td class="num">${peso(sd.cogs.total.YTD||0)}</td></tr>`+`<tr class="tot"><td>Gross Profit</td>${MONTHS.map(m=>{const v=sd.grossProfit?.amount?.[m]||0;return`<td class="num ${v>=0?'vp':'vn'}">${peso(v)}</td>`;}).join('')}<td class="num">${peso(sd.grossProfit?.amount?.YTD||0)}</td></tr>`+'</tbody>';
-}
-function renderCompTable() {
-  if (!S.sum) return;
-  const sd = S.sum;
-  const items = [{l:'Salaries & Wages',d:sd.compensation.salariesWages},{l:'Allowances',d:sd.compensation.allowances},{l:'Overtime / Holidays',d:sd.compensation.overtime},{l:'13th Month / Bonus',d:sd.compensation.bonus13th},{l:'Statutory Benefits',d:sd.compensation.statutoryBen},{l:'Service Incentive',d:sd.compensation.sil}];
-  el('compTable').innerHTML = '<thead><tr><th>COMP ITEM</th>'+MONTHS.map(m=>`<th class="num">${m}</th>`).join('')+'<th class="num">YTD</th></tr></thead><tbody>'+items.map(it=>`<tr><td>${it.l}</td>${MONTHS.map(m=>`<td class="num">${peso(it.d[m]||0)}</td>`).join('')}<td class="num">${peso(it.d.YTD||0)}</td></tr>`).join('')+`<tr class="tot"><td>Total Compensation</td>${MONTHS.map(m=>`<td class="num">${peso(sd.compensation.total[m]||0)}</td>`).join('')}<td class="num">${peso(sd.compensation.total.YTD||0)}</td></tr>`+'</tbody>';
-}
-function renderCOGSTrend() {
-  const d = S.data.monthlyTrend; dc('cogsTrend');
-  S.charts.cogsTrend = new Chart(el('cogsTrend'), {type:'bar',data:{labels:MONTHS,datasets:[{label:'COGS',data:d.cogs,backgroundColor:C.orangeA,borderColor:C.orange2,borderWidth:1.5,borderRadius:5},{label:'Gross Profit',data:d.grossProfit,type:'line',borderColor:C.green2,backgroundColor:'transparent',tension:.4,pointRadius:3,borderWidth:2}]},options:mkBarOpts()});
-}
-function renderCOGSGP() {
-  const d = S.data.monthlyTrend; dc('cogsGP');
-  const gms = d.sales.map((s,i) => s > 0 ? +(d.grossProfit[i]/s*100).toFixed(1) : 0);
-  const opts = mkLineOpts(); opts.scales.y.ticks.callback = v => v+'%'; opts.plugins.tooltip.callbacks.label = c => ' '+c.dataset.label+': '+c.raw+'%';
-  S.charts.cogsGP = new Chart(el('cogsGP'), {type:'line',data:{labels:MONTHS,datasets:[{label:'Gross Margin %',data:gms,borderColor:C.green2,backgroundColor:C.greenA,fill:true,tension:.4,pointRadius:4,borderWidth:2}]},options:opts});
-}
-function renderOpExTrend() {
-  const d = S.data.monthlyTrend; dc('opexTrend');
-  S.charts.opexTrend = new Chart(el('opexTrend'), {type:'bar',data:{labels:MONTHS,datasets:[{label:'Total OpEx',data:d.opex,backgroundColor:C.orangeA,borderColor:C.orange2,borderWidth:1.5,borderRadius:5},{label:'Net Sales',data:d.sales,type:'line',borderColor:C.blue2,backgroundColor:'transparent',tension:.4,pointRadius:3,borderWidth:2}]},options:mkBarOpts()});
-}
-function renderCompTrend() {
-  const d = S.data.monthlyTrend; dc('compTrend');
-  const comp = S.sum ? MONTHS.map(m => S.sum.compensation.total[m] || 0) : d.opex;
-  S.charts.compTrend = new Chart(el('compTrend'), {type:'line',data:{labels:MONTHS,datasets:[{label:'Compensation',data:comp,borderColor:C.blue2,backgroundColor:C.blueA,fill:true,tension:.4,pointRadius:3,borderWidth:2},{label:'Total OpEx',data:d.opex,borderColor:C.orange2,backgroundColor:'transparent',fill:false,tension:.4,pointRadius:3,borderWidth:2,borderDash:[4,3]}]},options:mkLineOpts()});
+  S.charts.chartDonut = new Chart(el('chartDonut'), {
+    type:'doughnut',
+    data:{labels:['Gross Margin','COGS %'],datasets:[{data:[Math.max(0,gm*100),Math.max(0,(1-gm)*100)],backgroundColor:[fc,'#e2e8f0'],borderColor:['#fff','#fff'],borderWidth:3}]},
+    options:{responsive:false,cutout:'72%',plugins:{legend:{display:false},tooltip:{enabled:false}}}
+  });
+  el('donutLegend').innerHTML = [
+    {dot:fc,       n:'Gross Margin', v:pct(gm)},
+    {dot:'#e2e8f0',n:'COGS Share',   v:pct(1-gm)},
+    {dot:C.teal2,  n:'Net Income',   v:peso(v.ni,true)}
+  ].map(r=>`<div class="dl-row"><span class="dl-dot" style="background:${r.dot}"></span><span class="dl-name">${r.n}</span><span class="dl-val">${r.v}</span></div>`).join('');
 }
 
-/* ═══ BONUS TABLE BUILDER ═══ */
+/* ═══ BONUS TABLE ═══ */
 function buildBonusTable() {
-  const sd = S.sum, d = S.data; if (!sd && !d) return '<p style="padding:16px;color:var(--gray500)">No data yet.</p>';
+  const sd = S.sum, d = S.data;
+  if (!sd && !d) return '<p style="padding:16px;color:var(--gray500)">No data yet.</p>';
   const mt = 50000, at = mt * 12;
 
   const rows = MONTHS.map((m,i) => {
@@ -1241,7 +1140,6 @@ function buildBonusTable() {
   const ap   = at > 0 ? tp/at : 0;
   const metC = rows.filter(r=>r.met).length;
 
-  // Hero banner inside drill
   const heroBanner = `
     <div style="background:linear-gradient(135deg,#1e1b4b,#4c1d95,#5b21b6);border-radius:10px;padding:22px 26px;color:#fff;margin-bottom:18px;position:relative;overflow:hidden;">
       <div style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:4px;">Annual Commission Achievement — FY ${S.year}</div>
@@ -1259,15 +1157,6 @@ function buildBonusTable() {
       </div>
     </div>`;
 
-  const cfg_row = `
-    <div style="display:flex;align-items:center;gap:10px;background:#f5f3ff;border:1.5px solid #ddd6fe;border-radius:8px;padding:8px 14px;margin-bottom:14px;font-size:12px;color:#5b21b6;">
-      <label style="font-weight:600;">💡 Monthly Target (₱):</label>
-      <input type="number" id="bonusInput" value="50000" min="0" step="1000"
-        style="font-size:12px;font-weight:600;padding:4px 8px;border-radius:5px;border:1.5px solid #c4b5fd;width:120px;outline:none;color:#1e1b4b;"
-        oninput="if(S.activeDrill==='bonus'){openDrill('bonus');}" />
-      <span style="color:#7c3aed;font-size:11px;">← Adjust to recalculate instantly</span>
-    </div>`;
-
   const thead = `<thead><tr>
     <th>MONTH</th><th class="num">TARGET</th><th class="num">PROGRESS</th>
     <th class="num">VARIANCE</th><th>BATTERY LEVEL</th>
@@ -1275,16 +1164,15 @@ function buildBonusTable() {
   </tr></thead>`;
 
   const tbody = rows.map(r => {
-    const mt2 = 50000;
     const cap = Math.min(r.pa*100,100).toFixed(1);
     const bc  = r.pa>=1?'hi':r.pa>=.5?'med':'low';
     const batt = r.met
       ? `<div class="batt-wrap"><div class="batt-track" style="flex:1"><div class="batt-fill hi" style="width:100%"></div></div><span class="batt-met">🏆 MET</span></div>`
       : `<div class="batt-wrap"><div class="batt-track"><div class="batt-fill ${bc}" style="width:${cap}%"></div></div><span class="batt-lbl">${(r.pa*100).toFixed(1)}%</span></div>`;
-    const niS = r.ni>=0?'<span class="spill profit">✅ Profit</span>':'<span class="spill loss">🔴 Loss</span>';
+    const niS = r.ni>=0 ? '<span class="spill profit">✅ Profit</span>' : '<span class="spill loss">🔴 Loss</span>';
     return `<tr>
       <td style="font-weight:600">${r.m}</td>
-      <td class="num">${peso(mt2)}</td>
+      <td class="num">${peso(mt)}</td>
       <td class="num" style="font-weight:600">${peso(r.prog)}</td>
       <td class="num ${r.va>=0?'vp':'vn'}">${r.va>=0?'+':''}${peso(r.va)}</td>
       <td>${batt}</td>
@@ -1297,25 +1185,33 @@ function buildBonusTable() {
   const aB = `<div class="batt-wrap"><div class="batt-track"><div class="batt-fill hi" style="width:${Math.min(ap*100,100).toFixed(1)}%"></div></div><span class="batt-lbl">${(ap*100).toFixed(1)}%</span></div>`;
   const totalRow = `<tr class="tot"><td>ANNUAL TOTAL</td><td class="num">${peso(at)}</td><td class="num">${peso(tp)}</td><td class="num ${ap>=1?'vp':'vn'}">${ap>=1?'+':''}${peso(tp-at)}</td><td>${aB}</td><td class="num">${(ap*100).toFixed(1)}%</td><td class="num">${peso(tni)}</td><td style="font-size:11px;color:rgba(255,255,255,.7);font-family:var(--font)">${metC}/12 months met</td></tr>`;
 
-  return heroBanner + cfg_row + `<div class="tbl-scroll"><table class="data-table">${thead}<tbody>${tbody}${totalRow}</tbody></table></div>`;
+  return heroBanner + `<div class="tbl-scroll"><table class="data-table">${thead}<tbody>${tbody}${totalRow}</tbody></table></div>`;
 }
 
-/* ═══ BONUS (legacy — no longer needed but kept for safety) ═══ */
+/* ═══ BONUS render (kept for safety) ═══ */
 function renderBonus() {}
 
-/* CLOCK */
-setInterval(()=>{ el('clockEl').textContent=new Date().toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit',second:'2-digit'}); },1000);
+/* ═══ CLOCK ═══ */
+setInterval(() => {
+  el('clockEl').textContent = new Date().toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}, 1000);
 
-/* YEAR SELECT */
+/* ═══ YEAR SELECT ═══ */
 (()=>{
   const sel = el('selYear');
-  for (let y=2025;y<=2030;y++){const o=document.createElement('option');o.value=y;o.textContent=y;sel.appendChild(o);}
-  sel.value='2025';
+  for (let y=2025; y<=2030; y++) {
+    const o = document.createElement('option');
+    o.value = y; o.textContent = y; sel.appendChild(o);
+  }
+  sel.value = '2025';
 })();
 
-/* AUTO REFRESH */
-let cd=30,timer=null;
-function startCD(){ clearInterval(timer); cd=30; timer=setInterval(()=>{cd--;if(cd<=0){fetchData();cd=30;}},1000); }
+/* ═══ AUTO REFRESH ═══ */
+let cd = 30, timer = null;
+function startCD() {
+  clearInterval(timer); cd = 30;
+  timer = setInterval(() => { cd--; if (cd <= 0) { fetchData(); cd = 30; } }, 1000);
+}
 
 fetchData();
 startCD();
