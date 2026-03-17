@@ -66,8 +66,8 @@ body{font-family:var(--font);background:var(--gray100);color:var(--gray900);font
 .period-badge{background:var(--blue-bg);border:1.5px solid var(--blue-bd);color:var(--blue);font-size:12px;font-weight:700;padding:4px 12px;border-radius:999px;}
 
 /* ── KPI GRID ── */
-.kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:8px;}
-@media(max-width:1100px){.kpi-grid{grid-template-columns:repeat(3,1fr);}}
+.kpi-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:8px;}
+@media(max-width:1300px){.kpi-grid{grid-template-columns:repeat(3,1fr);}}
 @media(max-width:700px){.kpi-grid{grid-template-columns:repeat(2,1fr);}}
 @media(max-width:420px){.kpi-grid{grid-template-columns:1fr;}}
 
@@ -114,6 +114,13 @@ body{font-family:var(--font);background:var(--gray100);color:var(--gray900);font
 .kpi-teal   .kpi-bar-fill{background:var(--teal2);}
 .kpi-red    .kpi-bar-fill{background:var(--red2);}
 .kpi-purple .kpi-bar-fill{background:#7c3aed;}
+.kpi-indigo .kpi-dot{background:#4f46e5;}
+.kpi-indigo .kpi-bar-fill{background:linear-gradient(90deg,#4f46e5,#818cf8);}
+.kpi.active.kpi-indigo{border-color:#4f46e5;box-shadow:0 0 0 3px rgba(79,70,229,.1),var(--shadow-md);}
+.kpi.active.kpi-indigo .kpi-arrow{background:#4f46e5;}
+.drill-panel.dp-indigo{border-color:#4f46e5;}
+.dp-indigo .drill-header{background:#eef2ff;border-bottom-color:#c7d2fe;}
+.dp-indigo .dtab.active{background:#4f46e5;border-color:#4f46e5;}
 
 /* ── DRILL PANEL ── */
 .drill-panel{background:var(--white);border:2px solid var(--blue);border-radius:var(--radius);overflow:hidden;margin-top:12px;margin-bottom:20px;box-shadow:var(--shadow-lg);animation:slideDown .25s ease;}
@@ -329,7 +336,7 @@ body{font-family:var(--font);background:var(--gray100);color:var(--gray900);font
 </div>
 
 <script>
-const API = 'https://script.google.com/macros/s/AKfycbzjNe036LSOmL1jvOxMrFGZQn8e-HPwpJ997LVP18T_ie2_5LB3HPwRiui9fG9sO5s/exec';
+const API = 'https://script.google.com/macros/s/AKfycbzttOtXGtrgNGteNfqPthgTs54QP4VsJPQJOPFZnRJ5SJfHZ_br2W1KwJZb_N7toh0/exec';
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const MN = {Jan:'January',Feb:'February',Mar:'March',Apr:'April',May:'May',Jun:'June',Jul:'July',Aug:'August',Sep:'September',Oct:'October',Nov:'November',Dec:'December'};
 
@@ -378,6 +385,15 @@ function getCogsBD() {
 function getCompD() {
   const m = S.month, sd = S.sum, g = o => m === 'all' ? (o.YTD||0) : (o[m]||0);
   return sd ? {sal:g(sd.compensation.salariesWages),all:g(sd.compensation.allowances),ot:g(sd.compensation.overtime),b13:g(sd.compensation.bonus13th),stat:g(sd.compensation.statutoryBen),sil:g(sd.compensation.sil)} : null;
+}
+function getGADetail() {
+  const m = S.month, sd = S.sum;
+  if (!sd || !sd.gaDetail) return null;
+  const g = o => o ? (m === 'all' ? (o.YTD||0) : (o[m]||0)) : 0;
+  // Map all GA line items from the Apps Script data
+  const items = {};
+  Object.keys(sd.gaDetail).forEach(k => { items[k] = g(sd.gaDetail[k]); });
+  return items;
 }
 
 function setView(v) {
@@ -462,6 +478,16 @@ function renderKPIs() {
         value: (ap*100).toFixed(1)+'%', meta: metC + '/12 months met · Target: '+peso(at,true),
         change: tp >= at ? '✅ Annual Target Met!' : peso(at-tp,true)+' remaining', chCls: tp>=at?'ch-up':'ch-flat',
         bar: Math.min(ap*100,100) };
+    })(),
+    (()=>{
+      const ob = getOpexBD() || {};
+      const gaVal = ob.ga || 0;
+      const totalOpex = (ob.comp||0) + (ob.ga||0) + (ob.comm||0) || 1;
+      const gaPct = (gaVal / totalOpex * 100).toFixed(1);
+      return { id:'ga', cls:'kpi-indigo', icon:'🏢', label:'G&A Expenses',
+        value: peso(gaVal, true), meta: gaPct + '% of Total OpEx',
+        change: 'Click to view breakdown', chCls:'ch-flat',
+        bar: Math.min(gaVal / totalOpex * 100, 100) };
     })()
   ];
 
@@ -501,7 +527,8 @@ function openDrill(id) {
     gp:    { title:'Gross Profit — COGS Detail',   sub:'Cost of goods breakdown',           cls:'dp-green' },
     opex:  { title:'Operating Expenses — Detail',  sub:'Compensation & expense structure',  cls:'dp-orange' },
     ni:    { title:'Net Income — Detail',           sub:'Bottom-line performance',           cls: getVals().ni >= 0 ? 'dp-teal' : 'dp-red' },
-    bonus: { title:'🎯 Bonus Monitoring',           sub:'Monthly commission vs target',      cls:'dp-purple' }
+    bonus: { title:'🎯 Bonus Monitoring',           sub:'Monthly commission vs target',      cls:'dp-purple' },
+    ga:    { title:'🏢 G&A Expenses — Detail',      sub:'General & Administrative breakdown',cls:'dp-indigo' }
   };
   const c = cfg[id];
 
@@ -511,7 +538,8 @@ function openDrill(id) {
     gp:    [{k:'chart',l:'📊 Chart'},{k:'table',l:'📋 Table'}],
     opex:  [{k:'chart',l:'📊 Chart'},{k:'table',l:'📋 Table'}],
     ni:    [{k:'chart',l:'📊 Chart'},{k:'table',l:'📋 Table'}],
-    bonus: []
+    bonus: [],
+    ga:    [{k:'chart',l:'📊 Chart'},{k:'table',l:'📋 Table'}]
   };
 
   if (!S.drillTab[id]) S.drillTab[id] = 'chart';
@@ -567,6 +595,18 @@ function buildStats(id) {
       const tp=MONTHS.reduce((s,m,i)=>s+(sd?(sd.opex.totalCommissions[m]||0):(d2.monthlyTrend.opex[i]*0.05)),0);
       const metC=MONTHS.filter((m,i)=>(sd?(sd.opex.totalCommissions[m]||0):(d2.monthlyTrend.opex[i]*0.05))>=mt).length;
       return [{v:peso(tp,true),l:'Total Progress'},{v:peso(at,true),l:'Annual Target'},{v:metC+'/12',l:'Months Met'},{v:((tp/at)*100).toFixed(1)+'%',l:'Achievement'}];
+    })(),
+    ga: (()=>{
+      const ob = getOpexBD() || {};
+      const ga = getGADetail() || {};
+      const gaTotal = ob.ga || 0;
+      const top3 = Object.entries(ga).filter(([k])=>k!=='total').sort((a,b)=>b[1]-a[1]).slice(0,1);
+      return [
+        {v:peso(gaTotal,true),l:'Total G&A'},
+        {v:peso(ob.comp||0,true),l:'vs Compensation'},
+        {v:peso(ob.comm||0,true),l:'vs Commissions'},
+        {v:((gaTotal/((ob.comp||0)+(ob.ga||0)+(ob.comm||0)||1))*100).toFixed(1)+'%',l:'% of OpEx'}
+      ];
     })()
   };
   return (map[id] || []).map(s => `<div class="dstat"><div class="dstat-val">${s.v}</div><div class="dstat-lbl">${s.l}</div></div>`).join('');
@@ -610,6 +650,24 @@ function buildViz(id) {
       </div><div class="mb-track"><div class="mb-fill" style="width:${(it.v/max*100).toFixed(1)}%;background:${it.c}"></div></div></div>`).join('');
     return `<div class="drill-viz-row">${chartHtml}<div class="drill-viz-bars"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--gray400);margin-bottom:10px;">Compensation Breakdown</div>${bars}</div></div>`;
   }
+  if (id === 'ga') {
+    const ga = getGADetail();
+    // fallback: show monthly trend bars
+    if (!ga) return `<div style="width:100%">${chartHtml}</div>`;
+    const items = Object.entries(ga)
+      .map(([k,v])=>({l:gaLabel(k),v,c:gaColor(k)}))
+      .filter(i=>i.v>0)
+      .sort((a,b)=>b.v-a.v)
+      .slice(0,10);
+    const max = Math.max(...items.map(i=>i.v),1);
+    const tot = items.reduce((s,i)=>s+i.v,0)||1;
+    const bars = items.map(it=>`
+      <div class="mb"><div class="mb-top">
+        <span class="mb-name"><span class="mb-dot" style="background:${it.c}"></span>${it.l}</span>
+        <span class="mb-val">${peso(it.v,true)} <span style="color:var(--gray400);font-size:10px">${(it.v/tot*100).toFixed(0)}%</span></span>
+      </div><div class="mb-track"><div class="mb-fill" style="width:${(it.v/max*100).toFixed(1)}%;background:${it.c}"></div></div></div>`).join('');
+    return `<div class="drill-viz-row">${chartHtml}<div class="drill-viz-bars"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--gray400);margin-bottom:10px;">Top G&A Items</div>${bars}</div></div>`;
+  }
   // ni / bonus
   return `<div style="width:100%">${chartHtml}</div>`;
 }
@@ -636,6 +694,7 @@ function buildDrillTable(id) {
       `<tr class="tot"><td>Total Compensation</td>${MONTHS.map(m=>`<td class="num">${peso(sd.compensation.total[m]||0)}</td>`).join('')}<td class="num">${peso(sd.compensation.total.YTD||0)}</td></tr></tbody></table>`);
   }
   if (id === 'bonus') return buildBonusTable();
+  if (id === 'ga') return buildGATable();
   return wrap('<table class="data-table">' + H(['MONTH','Net Sales','COGS','OpEx','Net Income']) +
     '<tbody>' + MONTHS.map((m,i) => `<tr><td>${m}</td><td class="num">${peso(d.sales[i])}</td><td class="num amt-neg">${peso(d.cogs[i])}</td><td class="num amt-neg">${peso(d.opex[i])}</td><td class="num ${d.netIncome[i]>=0?'vp':'vn'}">${peso(d.netIncome[i])}</td></tr>`).join('') +
     `<tr class="tot"><td>YTD</td><td class="num">${peso(sum(d.sales))}</td><td class="num">${peso(sum(d.cogs))}</td><td class="num">${peso(sum(d.opex))}</td><td class="num">${peso(sum(d.netIncome))}</td></tr></tbody></table>`);
@@ -825,9 +884,92 @@ function initDrillChart(id) {
     });
     return;
   }
+  if (id === 'ga') {
+    const sd = S.sum;
+    const gaMonthly = sd ? MONTHS.map(m => sd.opex.gaExpenses[m] || 0) : S.data.monthlyTrend.opex.map(v => v * 0.4);
+    const opts = barOpts();
+    opts.interaction = { mode:'index', intersect:false };
+    S.charts.drill = new Chart(ctx, {type:'bar', data:{labels:MONTHS, datasets:[
+      { label:'G&A Expenses', data:gaMonthly, backgroundColor:'rgba(79,70,229,.22)', borderColor:'#4f46e5', borderWidth:2, borderRadius:6, order:2 },
+      { label:'Total OpEx', data:S.data.monthlyTrend.opex, type:'line', borderColor:C.orange2, backgroundColor:'transparent', tension:.4, pointRadius:3, borderWidth:2, borderDash:[5,3], order:1 }
+    ]}, options:opts});
+    return;
+  }
 }
 
-/* ═══ CHARTS ═══ */
+/* ═══ G&A HELPERS ═══ */
+const GA_LABELS = {
+  postage:'Postage & Telecom', utilities:'Office Utilities', rental:'Office Rental',
+  officeSupplies:'Office Supplies', officeMaint:'Office Maintenance', vehicleMaint:'Vehicle Maintenance',
+  carRental:'Car Rental / KIA', vehicleLicense:'Vehicle Licenses', advertising:'Advertising & Publicity',
+  seminars:'Seminars & Meetings', representation:'Representation', marketingStaff:'Marketing Staff',
+  meals:'Meals & Refreshments', gasolineProv:'Gasoline (Province)', diesel:'Diesel for Van',
+  gasolineMoto:'Gasoline (Motorcab)', gasolineKia:'Gasoline (KIA)', tollFees:'Toll Fees',
+  parking:'Parking Fees', travel:'Travel Charges', cable:'Cable / Internet',
+  fare:'Fare', taxesLicenses:'Taxes, Licenses & Permits', solicitation:'Solicitation & Rental',
+  professional:'Professional Fees', penalty:'Penalty & Surcharges', trainings:'Trainings & Seminar',
+  interestLoan:'Interest on Loan', miscellaneous:'Miscellaneous',
+  amortTaxes:'Amort. - Taxes & Licenses', leaseholdExp:'Leasehold Expenses',
+  officeEquipment:'Office Equipment', officeMaintAmort:'Office Maint. (Amort)',
+  carAvanza:'Car Maint. - Avanza', motorcycle:'Motorcycle Maintenance',
+  trainingsAmort:'Trainings (Amort)', miscAmort:'Miscellaneous (Amort)'
+};
+const GA_COLORS_LIST = ['#4f46e5','#7c3aed','#0e7490','#15803d','#c2410c','#b91c1c','#0369a1','#92400e','#065f46','#1e40af','#6d28d9','#9a3412','#047857','#1d4ed8','#7c2d12','#0f766e','#6b21a8','#0c4a6e'];
+function gaLabel(k) { return GA_LABELS[k] || k; }
+function gaColor(k) { const keys = Object.keys(GA_LABELS); return GA_COLORS_LIST[keys.indexOf(k) % GA_COLORS_LIST.length] || '#64748b'; }
+
+function buildGATable() {
+  const sd = S.sum;
+  if (!sd || !sd.gaDetail) {
+    // Fallback: show monthly GA totals only
+    const gaMonthly = MONTHS.map(m => sd ? (sd.opex.gaExpenses[m]||0) : 0);
+    const H2 = '<thead><tr><th>MONTH</th><th class="num">G&A TOTAL</th><th class="num">vs Total OpEx</th></tr></thead>';
+    const rows = MONTHS.map((m,i) => `<tr><td>${m}</td><td class="num">${peso(gaMonthly[i])}</td><td class="num">${peso(S.data.monthlyTrend.opex[i])}</td></tr>`).join('');
+    return `<div class="tbl-scroll"><table class="data-table">${H2}<tbody>${rows}</tbody></table></div>
+      <div style="margin-top:14px;padding:14px 16px;background:#eef2ff;border:1.5px solid #c7d2fe;border-radius:8px;font-size:12px;color:#4338ca;">
+        <strong>⚠️ Apps Script Update Needed</strong> — To see full G&A line items, add <code>gaDetail</code> to your <code>getSummary</code> response. See instructions below.
+      </div>
+      ${buildGAScriptInstructions()}`;
+  }
+
+  const items = Object.entries(sd.gaDetail)
+    .filter(([k]) => k !== 'total')
+    .map(([k, obj]) => ({l: gaLabel(k), key: k, data: obj}))
+    .sort((a,b) => (b.data.YTD||0) - (a.data.YTD||0));
+
+  const H2 = '<thead><tr><th>G&A ITEM</th>' + MONTHS.map(m=>`<th class="num">${m}</th>`).join('') + '<th class="num">YTD</th></tr></thead>';
+  const rows = items.map(it =>
+    `<tr><td>${it.l}</td>${MONTHS.map(m=>`<td class="num">${peso(it.data[m]||0)}</td>`).join('')}<td class="num" style="font-weight:600">${peso(it.data.YTD||0)}</td></tr>`
+  ).join('');
+  const totRow = `<tr class="tot"><td>Total G&A</td>${MONTHS.map(m=>`<td class="num">${peso(sd.opex.gaExpenses[m]||0)}</td>`).join('')}<td class="num">${peso(sd.opex.gaExpenses.YTD||0)}</td></tr>`;
+
+  return `<div class="tbl-scroll"><table class="data-table">${H2}<tbody>${rows}${totRow}</tbody></table></div>`;
+}
+
+function buildGAScriptInstructions() {
+  return `<div style="margin-top:14px;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:8px;padding:16px 18px;font-size:11.5px;color:#334155;line-height:1.7;">
+    <div style="font-weight:700;font-size:13px;color:#0f172a;margin-bottom:10px;">📋 How to add G&A Detail to your Apps Script</div>
+    <p>In your <strong>getSummary</strong> function, inside the returned object, add a <code>gaDetail</code> key like this:</p>
+    <pre style="background:#1e293b;color:#e2e8f0;padding:12px 14px;border-radius:6px;font-size:11px;overflow-x:auto;margin-top:8px;">gaDetail: {
+  postage:        getRowByMonth(sheet, ROW_POSTAGE),
+  utilities:      getRowByMonth(sheet, ROW_UTILITIES),
+  rental:         getRowByMonth(sheet, ROW_RENTAL),
+  officeSupplies: getRowByMonth(sheet, ROW_OFFICE_SUPPLIES),
+  officeMaint:    getRowByMonth(sheet, ROW_OFFICE_MAINT),
+  vehicleMaint:   getRowByMonth(sheet, ROW_VEHICLE_MAINT),
+  carRental:      getRowByMonth(sheet, ROW_CAR_RENTAL),
+  advertising:    getRowByMonth(sheet, ROW_ADVERTISING),
+  representation: getRowByMonth(sheet, ROW_REPRESENTATION),
+  meals:          getRowByMonth(sheet, ROW_MEALS),
+  taxesLicenses:  getRowByMonth(sheet, ROW_TAXES),
+  professional:   getRowByMonth(sheet, ROW_PROFESSIONAL),
+  miscellaneous:  getRowByMonth(sheet, ROW_MISC),
+  // ... add all your G&A rows
+}</pre>
+    <p style="margin-top:10px;">Where <code>getRowByMonth</code> returns an object like <code>{Jan:580, Feb:580, ..., YTD:6960}</code>.<br/>
+    Each key name must match the labels in the dashboard (see GA_LABELS in the HTML).</p>
+  </div>`;
+}
 function mkLineOpts() { return {responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{labels:{color:C.text,font:{size:11},boxWidth:10,padding:12}},tooltip:{backgroundColor:'#fff',borderColor:C.border,borderWidth:1.5,titleColor:C.text,bodyColor:C.muted,padding:10,cornerRadius:8,callbacks:{label:c=>' '+c.dataset.label+': '+peso(c.raw)}}},scales:{x:{grid:{display:false},ticks:{color:C.muted,font:{size:10}}},y:{grid:{color:'#f1f5f9'},ticks:{color:C.muted,font:{size:10},callback:v=>peso(v,true)}}}}; }
 function mkBarOpts()  { return {responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:C.text,font:{size:11},boxWidth:10,padding:12}},tooltip:{backgroundColor:'#fff',borderColor:C.border,borderWidth:1.5,titleColor:C.text,bodyColor:C.muted,padding:10,cornerRadius:8,callbacks:{label:c=>' '+c.dataset.label+': '+peso(c.raw)}}},scales:{x:{grid:{display:false},ticks:{color:C.muted,font:{size:10}}},y:{grid:{color:'#f1f5f9'},ticks:{color:C.muted,font:{size:10},callback:v=>peso(v,true)}}}}; }
 const dc = id => { if (S.charts[id]) { S.charts[id].destroy(); delete S.charts[id]; } };
