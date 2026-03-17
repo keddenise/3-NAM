@@ -435,14 +435,33 @@ async function fetchData() {
   setStatus('loading', 'Connecting to Google Sheets…');
   try {
     const cb = Date.now();
-    const [kr, sr] = await Promise.all([
-      fetch(API + '?action=getKPIs&year='    + S.year + '&cb=' + cb),
-      fetch(API + '?action=getSummary&year=' + S.year + '&cb=' + (cb + 1))
-    ]);
-    const [kj, sj] = await Promise.all([kr.json(), sr.json()]);
-    if (!kj.success) throw new Error(kj.error || 'KPI failed');
-    if (!sj.success) throw new Error(sj.error || 'Summary failed');
-    S.data = kj.data; S.sum = sj.data;
+    // Single API call — getSummary has everything getKPIs has, no need for two calls
+    const res  = await fetch(API + '?action=getSummary&year=' + S.year + '&cb=' + cb);
+    const json = await res.json();
+    if (!json.success) throw new Error(json.error || 'Fetch failed');
+
+    const sd = json.data;
+    S.sum = sd;
+
+    // Derive KPI data client-side from summary (avoids second sheet read)
+    const salesArr  = MONTHS.map(m => sd.revenues.netSales[m]        || 0);
+    const gpArr     = MONTHS.map(m => sd.grossProfit.amount[m]        || 0);
+    const cogsArr   = MONTHS.map(m => sd.cogs.total[m]                || 0);
+    const opexArr   = MONTHS.map(m => sd.opex.total[m]                || 0);
+    const niArr     = MONTHS.map(m => sd.netIncome.afterTax[m]        || 0);
+    const ytdSales  = sd.revenues.netSales.YTD        || 0;
+    const ytdGP     = sd.grossProfit.amount.YTD       || 0;
+    const ytdNI     = sd.netIncome.afterTax.YTD       || 0;
+    const ytdCOGS   = sd.cogs.total.YTD               || 0;
+    const ytdOpEx   = sd.opex.total.YTD               || 0;
+
+    S.data = {
+      ytdSales, ytdGrossProfit: ytdGP, ytdNetIncome: ytdNI, ytdCOGS, ytdOpEx,
+      grossMarginPct: ytdSales > 0 ? ytdGP / ytdSales : 0,
+      netMarginPct:   ytdSales > 0 ? ytdNI / ytdSales : 0,
+      monthlyTrend: { months: MONTHS, sales: salesArr, grossProfit: gpArr, cogs: cogsArr, opex: opexArr, netIncome: niArr }
+    };
+
     el('periodHead').style.display = 'flex';
     el('bottomRow').style.display = 'grid';
     setStatus('ok', '✔ Updated · ' + new Date().toLocaleTimeString('en-PH'));
