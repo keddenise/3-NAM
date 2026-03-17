@@ -590,7 +590,7 @@ function buildViz(id) {
     return `<div class="drill-viz-row">${chartHtml}<div class="drill-viz-bars"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--gray400);margin-bottom:10px;">Compensation Breakdown</div>${bars}</div></div>`;
   }
   // ni / bonus
-  return `<div class="drill-viz-row">${chartHtml}</div>`;
+  return `<div style="width:100%">${chartHtml}</div>`;
 }
 
 function buildDrillTable(id) {
