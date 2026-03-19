@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>NAM Trading — Financial Dashboard</title>
+<title>NAM Group — Financial Dashboard</title>
 
 <!-- Bootstrap 5 -->
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
@@ -22,6 +22,13 @@
   --bs-body-bg: #f1f5f9;
   --bs-body-color: #0f172a;
 
+  /* ── DYNAMIC THEME (changes per company) ── */
+  --co-primary:    #1d4ed8;
+  --co-primary2:   #3b82f6;
+  --co-bg:         #eff6ff;
+  --co-bd:         #bfdbfe;
+  --co-logo-bg:    #1d4ed8;
+
   --blue:#1d4ed8; --blue2:#3b82f6; --blue-bg:#eff6ff; --blue-bd:#bfdbfe;
   --green:#15803d; --green2:#22c55e; --green-bg:#f0fdf4; --green-bd:#bbf7d0;
   --orange:#c2410c; --orange2:#f97316; --orange-bg:#fff7ed; --orange-bd:#fed7aa;
@@ -38,7 +45,7 @@
 
 body { font-family: var(--bs-body-font-family); background: var(--bs-body-bg); }
 
-/* ─── NAVBAR OVERRIDES ─── */
+/* ─── NAVBAR ─── */
 .navbar {
   background: #fff !important;
   border-bottom: 1px solid var(--gray200);
@@ -48,12 +55,45 @@ body { font-family: var(--bs-body-font-family); background: var(--bs-body-bg); }
 }
 .navbar-brand { display: flex; align-items: center; gap: 10px; }
 .nav-logo {
-  width: 34px; height: 34px; background: var(--blue); border-radius: 9px;
+  width: 34px; height: 34px; background: var(--co-logo-bg); border-radius: 9px;
   display: flex; align-items: center; justify-content: center;
   font-size: 12px; font-weight: 800; color: #fff; flex-shrink: 0;
+  transition: background .3s ease;
 }
 .nav-title { font-size: 15px; font-weight: 700; color: var(--gray900); line-height: 1.2; }
-.nav-sub { font-size: 11px; color: var(--gray500); }
+.nav-sub   { font-size: 11px; color: var(--gray500); }
+
+/* ── COMPANY SWITCHER ── */
+.co-switcher {
+  display: flex; align-items: center; gap: 4px;
+  background: var(--gray100); border-radius: 10px; padding: 3px;
+}
+.co-tab {
+  display: flex; align-items: center; gap: 6px;
+  padding: 5px 12px; border-radius: 7px;
+  font-size: 12px; font-weight: 700; cursor: pointer;
+  border: none; background: transparent;
+  color: var(--gray500); font-family: var(--bs-body-font-family);
+  transition: all .18s ease; white-space: nowrap;
+  position: relative;
+}
+.co-tab:hover { background: rgba(255,255,255,.7); color: var(--gray700); }
+
+/* Blue — NAM Trading */
+.co-tab.co-blue.active  { background: #fff; color: #1d4ed8; box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+.co-tab.co-blue .co-dot { background: #3b82f6; }
+
+/* Green — NAM Builders */
+.co-tab.co-green.active { background: #fff; color: #15803d; box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+.co-tab.co-green .co-dot { background: #22c55e; }
+
+/* Orange — ALM Manpower */
+.co-tab.co-orange.active { background: #fff; color: #c2410c; box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+.co-tab.co-orange .co-dot { background: #f97316; }
+
+.co-tab.disabled { opacity: .45; cursor: not-allowed; pointer-events: none; }
+.co-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.co-coming { font-size: 9px; font-weight: 700; background: var(--orange-bg); color: var(--orange); border-radius: 4px; padding: 1px 5px; margin-left: 2px; }
 
 .nav-tab-btn {
   padding: 6px 14px; border-radius: 8px; font-size: 12.5px; font-weight: 600;
@@ -61,30 +101,29 @@ body { font-family: var(--bs-body-font-family); background: var(--bs-body-bg); }
   font-family: var(--bs-body-font-family); transition: all .15s;
 }
 .nav-tab-btn:hover { background: var(--gray100); color: var(--gray700); }
-.nav-tab-btn.active { background: var(--blue-bg); color: var(--blue); }
+.nav-tab-btn.active { background: var(--co-bg); color: var(--co-primary); }
 
 .nav-clock {
-  background: var(--blue-bg); border: 1.5px solid var(--blue-bd); color: var(--blue);
+  background: var(--co-bg); border: 1.5px solid var(--co-bd); color: var(--co-primary);
   font-size: 12px; font-weight: 700; padding: 5px 12px; border-radius: 8px;
   min-width: 90px; text-align: center; font-variant-numeric: tabular-nums;
+  transition: all .3s ease;
 }
 
-/* override Bootstrap form-select */
 .form-select {
   font-size: 13px; font-weight: 600; color: var(--gray700);
   border: 1.5px solid var(--gray200); background-color: var(--gray50);
   border-radius: 8px; padding: 5px 10px; cursor: pointer; outline: none;
   font-family: var(--bs-body-font-family); transition: border-color .15s;
 }
-.form-select:focus { border-color: var(--blue2); box-shadow: none; }
+.form-select:focus { border-color: var(--co-primary2); box-shadow: none; }
 
-/* override Bootstrap btn-primary */
 .btn-primary {
-  background: var(--blue); border-color: var(--blue);
+  background: var(--co-primary); border-color: var(--co-primary);
   font-size: 12.5px; font-weight: 700; border-radius: 8px; padding: 6px 14px;
-  font-family: var(--bs-body-font-family);
+  font-family: var(--bs-body-font-family); transition: background .3s, border-color .3s;
 }
-.btn-primary:hover, .btn-primary:focus { background: var(--blue2); border-color: var(--blue2); box-shadow: none; }
+.btn-primary:hover, .btn-primary:focus { background: var(--co-primary2); border-color: var(--co-primary2); box-shadow: none; }
 .btn-primary:disabled { opacity: .5; }
 
 /* ── STATUS ALERT ── */
@@ -95,7 +134,7 @@ body { font-family: var(--bs-body-font-family); background: var(--bs-body-bg); }
 }
 .status-alert.loading { color: var(--orange); border-color: var(--orange-bd); background: var(--orange-bg); }
 .status-alert.error   { color: var(--red);    border-color: var(--red-bd);    background: var(--red-bg); }
-.status-alert.ok      { color: var(--green);  border-color: var(--green-bd);  background: var(--green-bg); }
+.status-alert.ok      { color: var(--co-primary); border-color: var(--co-bd); background: var(--co-bg); }
 .spin { width:12px; height:12px; border:2px solid currentColor; border-top-color:transparent; border-radius:50%; animation:spin .7s linear infinite; flex-shrink:0; display:inline-block; }
 @keyframes spin { to { transform:rotate(360deg) } }
 
@@ -104,8 +143,9 @@ body { font-family: var(--bs-body-font-family); background: var(--bs-body-bg); }
 .period-title { font-size:22px; font-weight:800; color:var(--gray900); }
 .period-sub { font-size:13px; color:var(--gray500); margin-top:3px; }
 .period-badge {
-  background: var(--blue-bg); border: 1.5px solid var(--blue-bd); color: var(--blue);
+  background: var(--co-bg); border: 1.5px solid var(--co-bd); color: var(--co-primary);
   font-size:12px; font-weight:700; padding:4px 14px; border-radius:999px;
+  transition: all .3s ease;
 }
 
 /* ── KPI CARDS ── */
@@ -114,7 +154,7 @@ body { font-family: var(--bs-body-font-family); background: var(--bs-body-bg); }
   padding: 20px; cursor: pointer; position: relative; overflow: hidden;
   transition: all .2s ease; user-select: none; height: 100%;
 }
-.kpi:hover { border-color: var(--blue2); box-shadow: 0 4px 12px rgba(0,0,0,.09); transform: translateY(-2px); }
+.kpi:hover { border-color: var(--co-primary2); box-shadow: 0 4px 12px rgba(0,0,0,.09); transform: translateY(-2px); }
 .kpi.active { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(29,78,216,.12), 0 4px 12px rgba(0,0,0,.09); }
 .kpi.active.kpi-green  { border-color:var(--green);  box-shadow:0 0 0 3px rgba(21,128,61,.1),0 4px 12px rgba(0,0,0,.09); }
 .kpi.active.kpi-orange { border-color:var(--orange); box-shadow:0 0 0 3px rgba(194,65,12,.1),0 4px 12px rgba(0,0,0,.09); }
@@ -196,7 +236,7 @@ body { font-family: var(--bs-body-font-family); background: var(--bs-body-bg); }
 
 /* ── DRILL PANEL ── */
 .drill-panel {
-  background:#fff; border:2px solid var(--blue); border-radius:12px;
+  background:#fff; border:2px solid var(--co-primary); border-radius:12px;
   overflow:hidden; margin-top:12px; margin-bottom:20px;
   box-shadow:0 10px 15px rgba(0,0,0,.08),0 4px 6px rgba(0,0,0,.05);
   animation:slideDown .25s ease;
@@ -210,8 +250,9 @@ body { font-family: var(--bs-body-font-family); background: var(--bs-body-bg); }
 @keyframes slideDown { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:translateY(0)} }
 
 .drill-header {
-  padding:16px 22px; background:var(--blue-bg); border-bottom:1px solid var(--blue-bd);
+  padding:16px 22px; background:var(--co-bg); border-bottom:1px solid var(--co-bd);
   display:flex; align-items:center; justify-content:space-between;
+  transition: background .3s, border-color .3s;
 }
 .dp-green  .drill-header { background:var(--green-bg);  border-bottom-color:var(--green-bd); }
 .dp-orange .drill-header { background:var(--orange-bg); border-bottom-color:var(--orange-bd); }
@@ -246,7 +287,7 @@ body { font-family: var(--bs-body-font-family); background: var(--bs-body-bg); }
   color:var(--gray500); transition:all .15s; font-family:var(--bs-body-font-family);
 }
 .dtab:hover { border-color:var(--gray300); color:var(--gray700); }
-.dtab.active { background:var(--blue); border-color:var(--blue); color:#fff; }
+.dtab.active { background:var(--co-primary); border-color:var(--co-primary); color:#fff; }
 .dp-green  .dtab.active { background:var(--green);  border-color:var(--green); }
 .dp-orange .dtab.active { background:var(--orange); border-color:var(--orange); }
 .dp-teal   .dtab.active { background:var(--teal);   border-color:var(--teal); }
@@ -259,7 +300,7 @@ body { font-family: var(--bs-body-font-family); background: var(--bs-body-bg); }
 .drill-viz-bars { display:flex; flex-direction:column; gap:10px; padding-top:4px; }
 .drill-tbl-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.09em; color:#94a3b8; margin-bottom:10px; }
 
-/* ── CHART CARDS (bottom row) ── */
+/* ── CHART CARDS ── */
 .chart-card { background:#fff; border:1.5px solid var(--gray200); border-radius:12px; padding:20px; box-shadow:0 1px 2px rgba(0,0,0,.05); }
 .chart-card-title { font-size:13.5px; font-weight:700; color:var(--gray900); margin:0; }
 .chart-card-sub   { font-size:11px; color:var(--gray500); margin-top:2px; }
@@ -275,14 +316,14 @@ body { font-family: var(--bs-body-font-family); background: var(--bs-body-bg); }
 .dl-name { flex:1; font-size:11.5px; color:var(--gray700); }
 .dl-val  { font-size:12px; font-weight:700; color:var(--gray900); }
 
-/* ── CUSTOM BADGE ── */
 .custom-badge {
   font-size:10.5px; font-weight:700; padding:2px 8px; border-radius:999px;
-  background:var(--blue-bg); color:var(--blue); border:none;
+  background:var(--co-bg); color:var(--co-primary); border:none;
+  transition: all .3s ease;
 }
 .custom-badge.g { background:var(--green-bg); color:var(--green); }
 
-/* ── TABLE OVERRIDES ── */
+/* ── TABLE ── */
 .data-table { width:max-content; min-width:100%; border-collapse:collapse; font-size:12px; }
 .data-table thead th {
   padding:9px 12px; background:var(--gray50); font-size:10px; text-transform:uppercase;
@@ -292,7 +333,7 @@ body { font-family: var(--bs-body-font-family); background: var(--bs-body-bg); }
 .data-table thead th.num { text-align:right; }
 .data-table tbody td   { padding:10px 12px; border-bottom:1px solid var(--gray200); color:var(--gray700); white-space:nowrap; }
 .data-table tbody td.num { text-align:right; font-variant-numeric:tabular-nums; }
-.data-table tbody tr:hover td { background:var(--blue-bg); }
+.data-table tbody tr:hover td { background:var(--co-bg); }
 .data-table tr.tot td { background:var(--gray900)!important; color:#fff; font-weight:700; border-top:2px solid var(--gray700); }
 .vp { color:var(--green); font-weight:700; }
 .vn { color:var(--red);   font-weight:700; }
@@ -301,11 +342,11 @@ body { font-family: var(--bs-body-font-family); background: var(--bs-body-bg); }
 .tbl-wrap { background:#fff; border:1.5px solid var(--gray200); border-radius:12px; box-shadow:0 1px 2px rgba(0,0,0,.05); overflow:hidden; margin-bottom:20px; }
 .tbl-head { display:flex; align-items:center; justify-content:space-between; padding:14px 20px; border-bottom:1px solid var(--gray200); }
 .tbl-head h3 { font-size:13px; font-weight:700; color:var(--gray900); margin:0; }
-.tbl-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:thin; scrollbar-color:var(--blue2) var(--gray100); }
+.tbl-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:thin; scrollbar-color:var(--co-primary2) var(--gray100); }
 .tbl-scroll::-webkit-scrollbar { height:10px; }
 .tbl-scroll::-webkit-scrollbar-track { background:var(--gray100); border-top:1px solid var(--gray200); }
-.tbl-scroll::-webkit-scrollbar-thumb { background:var(--blue2); border-radius:5px; border:2px solid var(--gray100); }
-.tbl-scroll::-webkit-scrollbar-thumb:hover { background:var(--blue); }
+.tbl-scroll::-webkit-scrollbar-thumb { background:var(--co-primary2); border-radius:5px; border:2px solid var(--gray100); }
+.tbl-scroll::-webkit-scrollbar-thumb:hover { background:var(--co-primary); }
 
 /* ── MINI BARS ── */
 .mini-bars { display:grid; grid-template-columns:1fr 1fr; gap:8px 20px; padding:4px 0; }
@@ -330,141 +371,45 @@ body { font-family: var(--bs-body-font-family); background: var(--bs-body-bg); }
 .spill.profit { background:var(--green-bg); color:var(--green); }
 .spill.loss   { background:var(--orange-bg); color:var(--orange); }
 
-/* ── RESPONSIVE KPI ── */
-@media(max-width:576px) { .kpi-value { font-size:20px; } }
-
-/* ════════════════════════════════════════
-   MOBILE RESPONSIVE — phones first
-   ════════════════════════════════════════ */
-
-/* ── Navbar: two-row layout on phones ── */
-@media (max-width: 767px) {
-  .navbar {
-    height: auto !important;
-    padding: 8px 12px !important;
-    flex-wrap: wrap;
-  }
-  .navbar .container-fluid {
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-  .navbar-brand {
-    flex: 1 1 auto;
-  }
-  .navbar .ms-auto {
-    width: 100%;
-    flex-wrap: wrap;
-    gap: 6px !important;
-    margin-left: 0 !important;
-  }
-  #selMonth {
-    width: 100% !important;
-    flex: 1 1 140px;
-  }
-  #selYear {
-    width: 80px !important;
-    flex-shrink: 0;
-  }
-  .nav-clock {
-    display: none;
-  }
-  #btnRefresh {
-    flex-shrink: 0;
-  }
+/* ── ALM PLACEHOLDER ── */
+.alm-placeholder {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  min-height: 400px; text-align: center; padding: 40px;
+}
+.alm-icon { font-size: 56px; margin-bottom: 20px; opacity: .3; }
+.alm-title { font-size: 22px; font-weight: 800; color: var(--gray700); margin-bottom: 8px; }
+.alm-sub { font-size: 14px; color: var(--gray500); max-width: 380px; line-height: 1.6; }
+.alm-badge {
+  display: inline-flex; align-items: center; gap: 6px; margin-top: 20px;
+  background: var(--orange-bg); color: var(--orange); border: 1.5px solid var(--orange-bd);
+  padding: 8px 18px; border-radius: 999px; font-size: 13px; font-weight: 700;
 }
 
-/* ── Navbar: ultra-small phones ── */
-@media (max-width: 400px) {
-  .nav-title  { font-size: 13px; }
-  .nav-sub    { font-size: 10px; }
-  .nav-logo   { width: 28px; height: 28px; font-size: 10px; border-radius: 7px; }
+/* ── RESPONSIVE ── */
+@media(max-width:767px) {
+  .navbar { height: auto !important; padding: 8px 12px !important; flex-wrap: wrap; }
+  .navbar .container-fluid { flex-wrap: wrap; gap: 8px; }
+  .navbar-brand { flex: 1 1 auto; }
+  .co-switcher { width: 100%; justify-content: center; }
+  .navbar .ms-auto { width: 100%; flex-wrap: wrap; gap: 6px !important; margin-left: 0 !important; }
+  #selMonth { width: 100% !important; flex: 1 1 140px; }
+  #selYear  { width: 80px !important; flex-shrink: 0; }
+  .nav-clock { display: none; }
 }
-
-/* ── Period header: stack on mobile ── */
-@media (max-width: 575px) {
-  .period-head {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-  }
+@media(max-width:400px) {
+  .nav-title { font-size: 13px; } .nav-sub { font-size: 10px; }
+  .nav-logo  { width: 28px; height: 28px; font-size: 10px; }
+  .co-tab    { font-size: 11px; padding: 4px 8px; }
+}
+@media(max-width:575px) {
+  .period-head { flex-direction: column; align-items: flex-start; gap: 8px; }
   .period-title { font-size: 17px; }
-  .period-sub   { font-size: 12px; }
-}
-
-/* ── KPI Cards: tighter padding on mobile ── */
-@media (max-width: 575px) {
-  .kpi {
-    padding: 14px 12px;
-  }
-  .kpi-value  { font-size: 17px; letter-spacing: -.5px; }
-  .kpi-label  { font-size: 9.5px; }
-  .kpi-meta   { font-size: 10.5px; }
-  .kpi-icon   { font-size: 16px; top: 12px; right: 12px; }
-  .kpi-arrow  { width: 20px; height: 20px; font-size: 10px; bottom: 10px; right: 10px; }
-  .kpi-change { font-size: 10px; }
-}
-
-/* ── Drill panel ── */
-@media (max-width: 575px) {
-  .drill-body   { padding: 14px; }
-  .drill-header { padding: 12px 14px; }
-  .drill-header-left h3 { font-size: 13px; }
-  .drill-header-left p  { font-size: 10.5px; }
-  .drill-stats  { grid-template-columns: repeat(2, 1fr); gap: 8px; }
-  .dstat-val    { font-size: 16px; }
-  .drill-chart  { height: 260px; }
-  .drill-tabs   { gap: 4px; }
-  .dtab         { padding: 5px 10px; font-size: 11px; }
-}
-
-/* ── Opex sub-cards: stack on small phones ── */
-@media (max-width: 480px) {
-  .opex-sub-card { padding: 10px 12px; }
-  .opex-sub-card .sc-value { font-size: 15px; }
-}
-
-/* ── Battery wrap: shrink on mobile ── */
-@media (max-width: 575px) {
-  .batt-wrap   { min-width: 90px; gap: 5px; }
-  .batt-track  { height: 10px; }
-  .batt-lbl    { font-size: 9px; }
-  .batt-met    { font-size: 9px; padding: 1px 5px; }
-}
-
-/* ── Chart cards ── */
-@media (max-width: 575px) {
+  .kpi { padding: 14px 12px; }
+  .kpi-value { font-size: 17px; letter-spacing: -.5px; }
+  .drill-body { padding: 14px; }
+  .drill-chart { height: 260px; }
   .chart-card { padding: 14px; }
   .chart-area { height: 180px; }
-  .chart-card-title { font-size: 12.5px; }
-  .donut-wrap { height: auto; padding: 10px 0; }
-}
-
-/* ── Bonus hero banner: scale down on mobile ── */
-@media (max-width: 575px) {
-  .bonus-hero-big   { font-size: 34px !important; }
-  .bonus-hero-small { font-size: 12px !important; }
-  .bonus-hero-pct   { font-size: 18px !important; }
-}
-
-/* ── Table scroll hint on mobile ── */
-@media (max-width: 575px) {
-  .tbl-scroll::after {
-    content: '← scroll →';
-    display: block;
-    text-align: center;
-    font-size: 10px;
-    color: var(--gray500);
-    padding: 4px 0;
-    background: var(--gray100);
-  }
-  .data-table { font-size: 11px; }
-  .data-table thead th,
-  .data-table tbody td { padding: 7px 9px; }
-}
-
-/* ── Status alert ── */
-@media (max-width: 575px) {
-  .status-alert { font-size: 11.5px; padding: 8px 12px; }
 }
 </style>
 </head>
@@ -472,24 +417,31 @@ body { font-family: var(--bs-body-font-family); background: var(--bs-body-bg); }
 
 <!-- ════════════════════ NAVBAR ════════════════════ -->
 <nav class="navbar navbar-expand sticky-top">
-  <div class="container-fluid px-3">
+  <div class="container-fluid px-3 flex-wrap gap-2">
 
     <!-- Brand -->
     <a class="navbar-brand d-flex align-items-center gap-2 text-decoration-none" href="#">
-      <div class="nav-logo">N</div>
+      <div class="nav-logo" id="navLogo">N</div>
       <div>
-        <div class="nav-title">NAM Trading Dashboard</div>
+        <div class="nav-title" id="navTitle">NAM Group Dashboard</div>
         <div class="nav-sub">Statement of Comprehensive Income</div>
       </div>
     </a>
 
-    <!-- Nav tabs (hidden for now) -->
-    <div class="d-none" id="navTabs">
-      <button class="nav-tab-btn active" onclick="setView('overview')" id="tab-overview">
-        <i class="bi bi-bar-chart-fill me-1"></i>Overview
+    <!-- ── COMPANY SWITCHER ── -->
+    <div class="co-switcher">
+      <button class="co-tab co-blue active" id="coTab-trading" onclick="switchCompany('trading')">
+        <span class="co-dot"></span>
+        NAM Trading
       </button>
-      <button class="nav-tab-btn" onclick="setView('bonus')" id="tab-bonus">
-        <i class="bi bi-bullseye me-1"></i>Bonus
+      <button class="co-tab co-green" id="coTab-builders" onclick="switchCompany('builders')">
+        <span class="co-dot"></span>
+        NAM Builders
+      </button>
+      <button class="co-tab co-orange disabled" id="coTab-alm" title="Coming soon">
+        <span class="co-dot"></span>
+        ALM Manpower
+        <span class="co-coming">Soon</span>
       </button>
     </div>
 
@@ -522,8 +474,8 @@ body { font-family: var(--bs-body-font-family); background: var(--bs-body-bg); }
     <span class="spin"></span>&nbsp; Connecting to Google Sheets…
   </div>
 
-  <!-- Overview View -->
-  <div id="view-overview">
+  <!-- IS Dashboard View (Trading + Builders) -->
+  <div id="view-is">
 
     <!-- Period header -->
     <div class="period-head" id="periodHead" style="display:none;">
@@ -536,7 +488,7 @@ body { font-family: var(--bs-body-font-family); background: var(--bs-body-bg); }
       <span class="period-badge" id="periodBadge">YTD</span>
     </div>
 
-    <!-- KPI Cards — Bootstrap row + col -->
+    <!-- KPI Cards -->
     <div class="row g-3 mb-3" id="kpiGrid"></div>
 
     <!-- Drill Panel -->
@@ -544,8 +496,6 @@ body { font-family: var(--bs-body-font-family); background: var(--bs-body-bg); }
 
     <!-- Bottom Row -->
     <div class="row g-3 mt-1" id="bottomRow" style="display:none;">
-
-      <!-- Trend Chart -->
       <div class="col-12 col-lg-8">
         <div class="chart-card h-100">
           <div class="d-flex justify-content-between align-items-start mb-3">
@@ -558,8 +508,6 @@ body { font-family: var(--bs-body-font-family); background: var(--bs-body-bg); }
           <div class="chart-area"><canvas id="chartTrend"></canvas></div>
         </div>
       </div>
-
-      <!-- Donut -->
       <div class="col-12 col-lg-4">
         <div class="chart-card h-100">
           <div class="d-flex justify-content-between align-items-start mb-3">
@@ -581,22 +529,64 @@ body { font-family: var(--bs-body-font-family); background: var(--bs-body-bg); }
           </div>
         </div>
       </div>
+    </div>
+  </div><!-- /view-is -->
 
-    </div><!-- /bottom row -->
-  </div><!-- /view-overview -->
+  <!-- ALM Placeholder -->
+  <div id="view-alm" style="display:none;">
+    <div class="alm-placeholder">
+      <div class="alm-icon"><i class="bi bi-people-fill"></i></div>
+      <div class="alm-title">ALM Manpower Service Corp.</div>
+      <div class="alm-sub">Dashboard for headcount tracking and income statement is currently being set up. Connect the ALM Google Sheet to enable this view.</div>
+      <div class="alm-badge">
+        <span class="spin" style="border-color:#c2410c;border-top-color:transparent;"></span>
+        Coming Soon
+      </div>
+    </div>
+  </div>
 
 </div><!-- /container -->
 
-
-<!-- Bootstrap JS bundle -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-const API = 'https://script.google.com/macros/s/AKfycbwmel6PRxAGyVp2t0p0I0QaAtC-U_xRc3C5GbJixgPBpSlR3P1Abd1XNzx-q6MyX2w/exec';
+// ════════════════════════════════════════════════
+//  COMPANY CONFIG — update URLs here
+// ════════════════════════════════════════════════
+const APIS = {
+  trading:  'https://script.google.com/macros/s/AKfycbwmel6PRxAGyVp2t0p0I0QaAtC-U_xRc3C5GbJixgPBpSlR3P1Abd1XNzx-q6MyX2w/exec',
+  builders: 'https://script.google.com/macros/s/AKfycbyt_ffHnLaheVTokjX72M2zC0uEP3mmWqQ_9m2_AJbiKd7Ee-LMkyo1FwaehdyFMYFm/exec',
+  alm:      null  // TODO: paste ALM Apps Script URL here when ready
+};
+
+const CO_THEMES = {
+  trading: {
+    primary: '#1d4ed8', primary2: '#3b82f6', bg: '#eff6ff', bd: '#bfdbfe',
+    logoBg: '#1d4ed8', logoText: 'T',
+    name: 'NAM Wholesale Trading', short: 'NAM Trading'
+  },
+  builders: {
+    primary: '#15803d', primary2: '#22c55e', bg: '#f0fdf4', bd: '#bbf7d0',
+    logoBg: '#15803d', logoText: 'B',
+    name: 'NAM Builders & Supply Corp.', short: 'NAM Builders'
+  },
+  alm: {
+    primary: '#c2410c', primary2: '#f97316', bg: '#fff7ed', bd: '#fed7aa',
+    logoBg: '#c2410c', logoText: 'A',
+    name: 'ALM Manpower Service Corp.', short: 'ALM Manpower'
+  }
+};
+
+// ════════════════════════════════════════════════
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const MN = {Jan:'January',Feb:'February',Mar:'March',Apr:'April',May:'May',Jun:'June',Jul:'July',Aug:'August',Sep:'September',Oct:'October',Nov:'November',Dec:'December'};
 
-let S = { year:'2025', month:'all', view:'overview', data:null, sum:null, charts:{}, activeDrill:null, drillTab:{}, opexSub:'comp' };
+let S = {
+  company: 'trading',
+  year: '2025', month: 'all', view: 'overview',
+  data: null, sum: null, charts: {},
+  activeDrill: null, drillTab: {}, opexSub: 'comp', opexSubTab: 'chart'
+};
 
 const C = {
   blue:'#1d4ed8', blue2:'#3b82f6', blueA:'rgba(59,130,246,.1)',
@@ -608,17 +598,59 @@ const C = {
   comp:['#1d4ed8','#2563eb','#3b82f6','#60a5fa','#93c5fd','#bfdbfe']
 };
 
-const el   = id => document.getElementById(id);
-const peso = (n, compact) => {
+const el    = id => document.getElementById(id);
+const peso  = (n, compact) => {
   if (n == null || isNaN(n)) return '—';
   const a = Math.abs(n);
   if (compact && a >= 1e6) return '₱' + (n/1e6).toFixed(2) + 'M';
   if (compact && a >= 1e3) return '₱' + (n/1e3).toFixed(1) + 'K';
   return '₱' + n.toLocaleString('en-PH',{minimumFractionDigits:2,maximumFractionDigits:2});
 };
-const pct  = n => (!n && n !== 0) ? '—' : (n*100).toFixed(1) + '%';
-const sum  = a => a.reduce((s,v) => s+v, 0);
-const plbl = () => S.month === 'all' ? 'YTD' : (MN[S.month] || S.month);
+const pct   = n => (!n && n !== 0) ? '—' : (n*100).toFixed(1) + '%';
+const sum   = a => a.reduce((s,v) => s+v, 0);
+const plbl  = () => S.month === 'all' ? 'YTD' : (MN[S.month] || S.month);
+
+// ── Apply company theme to CSS variables ──
+function applyTheme(co) {
+  const t = CO_THEMES[co];
+  const r = document.documentElement.style;
+  r.setProperty('--co-primary',  t.primary);
+  r.setProperty('--co-primary2', t.primary2);
+  r.setProperty('--co-bg',       t.bg);
+  r.setProperty('--co-bd',       t.bd);
+  r.setProperty('--co-logo-bg',  t.logoBg);
+  el('navLogo').textContent = t.logoText;
+  el('navTitle').textContent = t.name;
+}
+
+// ── Switch company ──
+function switchCompany(co) {
+  if (co === 'alm') return; // not ready yet
+  if (S.company === co) return;
+
+  S.company = co;
+  S.data = null; S.sum = null; S.activeDrill = null;
+
+  // Update tab active states
+  document.querySelectorAll('.co-tab').forEach(t => t.classList.remove('active'));
+  const tab = el('coTab-' + co);
+  if (tab) tab.classList.add('active');
+
+  // Apply color theme
+  applyTheme(co);
+
+  // Reset drill panel
+  el('drillPanel').style.display = 'none';
+  el('periodHead').style.display = 'none';
+  el('bottomRow').style.display = 'none';
+  el('kpiGrid').innerHTML = '';
+
+  // Show correct view
+  el('view-is').style.display  = co !== 'alm' ? '' : 'none';
+  el('view-alm').style.display = co === 'alm'  ? '' : 'none';
+
+  if (co !== 'alm') fetchData();
+}
 
 function getVals() {
   const d = S.data, m = S.month, isAll = m==='all', i = MONTHS.indexOf(m);
@@ -651,22 +683,20 @@ function getGADetail() {
   return items;
 }
 
-function setView(v) {
-  S.view=v;
-  document.querySelectorAll('.nav-tab-btn').forEach(t=>t.classList.toggle('active',t.id==='tab-'+v));
-  if (S.data) renderAll();
-}
 function onYearChange()  { S.year=el('selYear').value; fetchData(true); }
 function onMonthChange() { S.month=el('selMonth').value; if(S.data) renderAll(); }
 
 async function fetchData() {
+  const apiUrl = APIS[S.company];
+  if (!apiUrl) return;
+
   el('btnRefresh').disabled=true;
   setStatus('loading','Connecting to Google Sheets…');
   const controller=new AbortController();
   const timeout=setTimeout(()=>controller.abort(),20000);
   try {
     const cb=Date.now();
-    const res=await fetch(API+'?action=getSummary&year='+S.year+'&cb='+cb,{signal:controller.signal});
+    const res=await fetch(apiUrl+'?action=getSummary&year='+S.year+'&cb='+cb,{signal:controller.signal});
     clearTimeout(timeout);
     if(!res.ok) throw new Error('HTTP '+res.status);
     const json=await res.json();
@@ -687,7 +717,8 @@ async function fetchData() {
     };
     el('periodHead').style.display='flex';
     el('bottomRow').style.display='flex';
-    setStatus('ok','<i class="bi bi-check-circle-fill me-1"></i>Updated · '+new Date().toLocaleTimeString('en-PH'));
+    const co = CO_THEMES[S.company];
+    setStatus('ok','<i class="bi bi-check-circle-fill me-1"></i>'+co.short+' · Updated · '+new Date().toLocaleTimeString('en-PH'));
     renderAll();
   } catch(e) {
     clearTimeout(timeout);
@@ -704,16 +735,17 @@ function setStatus(t,m) {
 }
 
 function renderAll() {
+  const co = CO_THEMES[S.company];
   const lbl=plbl();
-  el('periodTitle').textContent='NAM Wholesale Trading — FY '+S.year;
-  el('periodBadge').textContent=lbl;
-  el('trendBadge').textContent='FY '+S.year;
-  el('donutBadge').textContent=lbl;
+  el('periodTitle').textContent = co.name + ' — FY ' + S.year;
+  el('periodBadge').textContent = lbl;
+  el('trendBadge').textContent  = 'FY ' + S.year;
+  el('donutBadge').textContent  = lbl;
   renderKPIs(); renderTrend(); renderDonut();
   if(S.activeDrill) openDrill(S.activeDrill);
 }
 
-/* ═══ KPI CARDS — Bootstrap col wrappers ═══ */
+/* ═══ KPI CARDS ═══ */
 function renderKPIs() {
   const v=getVals();
   const gm=v.sales>0?v.gp/v.sales:0;
@@ -1044,7 +1076,7 @@ function buildDrillTable(id){
 function buildISFullTable(){
   const d=S.data.monthlyTrend;
   const H=cols=>'<thead><tr>'+cols.map((c,i)=>`<th${i?' class="num"':''}>${c}</th>`).join('')+'</tr></thead>';
-  const sec=lbl=>`<tr style="background:var(--blue-bg)"><td colspan="${MONTHS.length+2}" style="font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--blue);padding:7px 14px;">${lbl}</td></tr>`;
+  const sec=lbl=>`<tr style="background:var(--co-bg)"><td colspan="${MONTHS.length+2}" style="font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--co-primary);padding:7px 14px;">${lbl}</td></tr>`;
   const row=(lbl,arr,cls='',neg=false)=>{
     const cells=arr.map(v=>`<td class="num${neg&&v>0?' amt-neg':''}">${peso(v)}</td>`).join('');
     const ytdV=sum(arr);
@@ -1080,7 +1112,7 @@ function initDrillChart(id){
     S.charts.drill=new Chart(ctx,{type:'bar',data:{labels:MONTHS,datasets:[
       {label:'Net Income',data:d.netIncome,backgroundColor:d.netIncome.map(v=>v>=0?'rgba(34,197,94,.35)':'rgba(239,68,68,.3)'),borderColor:d.netIncome.map(v=>v>=0?C.green2:C.red2),borderWidth:2,borderRadius:6,borderSkipped:false,yAxisID:'yNI',order:2,barPercentage:.7,categoryPercentage:.8},
       {label:'Net Sales',data:d.sales,type:'line',borderColor:C.blue2,backgroundColor:(ctx2)=>{const chart=ctx2.chart,{ctx:c2,chartArea}=chart;if(!chartArea)return'transparent';const grad=c2.createLinearGradient(0,chartArea.top,0,chartArea.bottom);grad.addColorStop(0,'rgba(59,130,246,.12)');grad.addColorStop(1,'rgba(59,130,246,.01)');return grad;},fill:'origin',tension:.4,pointRadius:4,pointHoverRadius:6,borderWidth:2.5,pointBackgroundColor:'#fff',pointBorderWidth:2,pointBorderColor:C.blue2,yAxisID:'ySales',order:1}
-    ]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{labels:{color:C.text,font:{size:11},boxWidth:10,padding:14}},tooltip:{backgroundColor:'#fff',borderColor:C.border,borderWidth:1.5,titleColor:C.text,bodyColor:C.muted,padding:10,cornerRadius:8,callbacks:{label:c=>' '+c.dataset.label+': '+peso(c.raw)}}},slots:{x:{grid:{display:false},ticks:{color:C.muted,font:{size:10}}},ySales:{position:'left',grid:{color:'#f1f5f9'},ticks:{color:C.blue2,font:{size:10},callback:v=>peso(v,true)}},yNI:{position:'right',grid:{drawOnChartArea:false},ticks:{color:C.muted,font:{size:10},callback:v=>peso(v,true)},afterDataLimits(scale){const abs=Math.max(Math.abs(scale.min),Math.abs(scale.max));scale.min=-abs*1.1;scale.max=abs*1.1;}}},scales:{x:{grid:{display:false},ticks:{color:C.muted,font:{size:10}}},ySales:{position:'left',grid:{color:'#f1f5f9'},ticks:{color:C.blue2,font:{size:10},callback:v=>peso(v,true)}},yNI:{position:'right',grid:{drawOnChartArea:false},ticks:{color:C.muted,font:{size:10},callback:v=>peso(v,true)},afterDataLimits(scale){const abs=Math.max(Math.abs(scale.min),Math.abs(scale.max));scale.min=-abs*1.1;scale.max=abs*1.1;}}}}}); return;
+    ]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{labels:{color:C.text,font:{size:11},boxWidth:10,padding:14}},tooltip:{backgroundColor:'#fff',borderColor:C.border,borderWidth:1.5,titleColor:C.text,bodyColor:C.muted,padding:10,cornerRadius:8,callbacks:{label:c=>' '+c.dataset.label+': '+peso(c.raw)}}},scales:{x:{grid:{display:false},ticks:{color:C.muted,font:{size:10}}},ySales:{position:'left',grid:{color:'#f1f5f9'},ticks:{color:C.blue2,font:{size:10},callback:v=>peso(v,true)}},yNI:{position:'right',grid:{drawOnChartArea:false},ticks:{color:C.muted,font:{size:10},callback:v=>peso(v,true)},afterDataLimits(scale){const abs=Math.max(Math.abs(scale.min),Math.abs(scale.max));scale.min=-abs*1.1;scale.max=abs*1.1;}}}}}); return;
   }
   if(id==='ga'){
     const sd=S.sum;
@@ -1094,7 +1126,7 @@ function initDrillChart(id){
 }
 
 /* ═══ G&A HELPERS ═══ */
-const GA_LABELS={postage:'Postage & Telecom',utilities:'Office Utilities',rental:'Office Rental',officeSupplies:'Office Supplies',officeMaint:'Office Maintenance',vehicleMaint:'Vehicle Maintenance',carRental:'Car Rental / KIA',vehicleLicense:'Vehicle Licenses',advertising:'Advertising & Publicity',seminars:'Seminars & Meetings',representation:'Representation',marketingStaff:'Marketing Staff',meals:'Meals & Refreshments',gasolineProv:'Gasoline (Province)',diesel:'Diesel for Van',gasolineMoto:'Gasoline (Motorcab)',gasolineKia:'Gasoline (KIA)',tollFees:'Toll Fees',parking:'Parking Fees',travel:'Travel Charges',cable:'Cable / Internet',fare:'Fare',taxesLicenses:'Taxes, Licenses & Permits',solicitation:'Solicitation & Rental',professional:'Professional Fees',penalty:'Penalty & Surcharges',trainings:'Trainings & Seminar',interestLoan:'Interest on Loan',miscellaneous:'Miscellaneous',amortTaxes:'Amort. - Taxes & Licenses',leaseholdExp:'Leasehold Expenses',officeEquipment:'Office Equipment',officeMaintAmort:'Office Maint. (Amort)',carAvanza:'Car Maint. - Avanza',motorcycle:'Motorcycle Maintenance',trainingsAmort:'Trainings (Amort)',miscAmort:'Miscellaneous (Amort)'};
+const GA_LABELS={postage:'Postage & Telecom',utilities:'Office Utilities',rental:'Office Rental',officeSupplies:'Office Supplies',officeMaint:'Office Maintenance',vehicleMaint:'Vehicle Maintenance',carRental:'Car Rental / KIA',carRentalKia:'Car Rental / KIA',vehicleLicense:'Vehicle Licenses',advertising:'Advertising & Publicity',seminars:'Seminars & Meetings',representation:'Representation',marketingStaff:'Marketing Staff',meals:'Meals & Refreshments',gasolineProv:'Gasoline (Province)',gasolineAvanza:'Gasoline (Avanza)',diesel:'Diesel for Van',gasolineMoto:'Gasoline (Moto)',gasolineKia:'Gasoline (KIA)',tollFees:'Toll Fees',parking:'Parking Fees',travel:'Travel Charges',roadUsageFees:'Road Usage Fees',cable:'Cable / Internet',gatePass:'Gate Pass',fare:'Fare',taxesLicenses:'Taxes & Licenses',solicitation:'Solicitation & Rental',professional:'Professional Fees',penalty:'Penalty & Surcharges',trainings:'Trainings & Seminar',interestLoan:'Interest on Loan',miscellaneous:'Miscellaneous',amortTaxes:'Amort. - Taxes',leaseholdExp:'Leasehold Exp.',marketingExpAmort:'Marketing Exp. (Amort)',officeEquipment:'Office Equipment',officeMaintAmort:'Office Maint. (Amort)',carAvanza:'Car Maint. - Avanza',motorcycle:'Motorcycle Maint.',trainingsAmort:'Trainings (Amort)',miscAmort:'Misc. (Amort)'};
 const GA_COLORS_LIST=['#4f46e5','#7c3aed','#0e7490','#15803d','#c2410c','#b91c1c','#0369a1','#92400e','#065f46','#1e40af','#6d28d9','#9a3412','#047857','#1d4ed8','#7c2d12','#0f766e','#6b21a8','#0c4a6e'];
 function gaLabel(k){return GA_LABELS[k]||k;}
 function gaColor(k){const keys=Object.keys(GA_LABELS);return GA_COLORS_LIST[keys.indexOf(k)%GA_COLORS_LIST.length]||'#64748b';}
@@ -1105,8 +1137,7 @@ function buildGATable(){
     const gaMonthly=MONTHS.map(m=>sd?(sd.opex.gaExpenses[m]||0):0);
     const H2='<thead><tr><th>MONTH</th><th class="num">G&A TOTAL</th><th class="num">vs Total OpEx</th></tr></thead>';
     const rows=MONTHS.map((m,i)=>`<tr><td>${m}</td><td class="num">${peso(gaMonthly[i])}</td><td class="num">${peso(S.data.monthlyTrend.opex[i])}</td></tr>`).join('');
-    return `<div class="tbl-scroll"><table class="data-table">${H2}<tbody>${rows}</tbody></table></div>
-      <div class="alert alert-info mt-3 small"><i class="bi bi-info-circle-fill me-1"></i><strong>Apps Script Update Needed</strong> — To see full G&A line items, add <code>gaDetail</code> to your <code>getSummary</code> response.</div>`;
+    return `<div class="tbl-scroll"><table class="data-table">${H2}<tbody>${rows}</tbody></table></div>`;
   }
   const items=Object.entries(sd.gaDetail).filter(([k])=>k!=='total').map(([k,obj])=>({l:gaLabel(k),key:k,data:obj})).sort((a,b)=>(b.data.YTD||0)-(a.data.YTD||0));
   const H2='<thead><tr><th>G&A ITEM</th>'+MONTHS.map(m=>`<th class="num">${m}</th>`).join('')+'<th class="num">YTD</th></tr></thead>';
@@ -1162,7 +1193,7 @@ function buildBonusTable(){
     <div style="background:linear-gradient(135deg,#1e1b4b,#4c1d95,#5b21b6);border-radius:10px;padding:22px 26px;color:#fff;margin-bottom:18px;overflow:hidden;">
       <div style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:4px;">Annual Commission Achievement — FY ${S.year}</div>
       <div class="d-flex align-items-end flex-wrap gap-4 mb-3">
-        <div class="bonus-hero-big" style="font-size:46px;font-weight:900;line-height:1;letter-spacing:-2px;">${(ap*100).toFixed(1)}<span class="bonus-hero-pct" style="font-size:22px;color:rgba(255,255,255,.6)">%</span></div>
+        <div style="font-size:46px;font-weight:900;line-height:1;letter-spacing:-2px;">${(ap*100).toFixed(1)}<span style="font-size:22px;color:rgba(255,255,255,.6)">%</span></div>
         <div class="d-flex flex-wrap gap-3 pb-2">
           <div><div style="font-size:14px;font-weight:700">${peso(tp,true)}</div><div style="font-size:10px;color:rgba(255,255,255,.5)">Total Progress</div></div>
           <div><div style="font-size:14px;font-weight:700">${peso(at,true)}</div><div style="font-size:10px;color:rgba(255,255,255,.5)">Annual Target</div></div>
@@ -1190,8 +1221,6 @@ function buildBonusTable(){
   return heroBanner+`<div class="tbl-scroll"><table class="data-table">${thead}<tbody>${tbody}${totalRow}</tbody></table></div>`;
 }
 
-function renderBonus(){}
-
 /* ═══ CLOCK ═══ */
 setInterval(()=>{
   el('clockEl').textContent=new Date().toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
@@ -1207,10 +1236,13 @@ setInterval(()=>{
   sel.value='2025';
 })();
 
-/* ═══ AUTO REFRESH ═══ */
+/* ═══ INIT ═══ */
+applyTheme('trading');
+fetchData();
+
+// Auto-refresh every 30s
 let cd=30,timer=null;
 function startCD(){clearInterval(timer);cd=30;timer=setInterval(()=>{cd--;if(cd<=0){fetchData();cd=30;}},1000);}
-fetchData();
 startCD();
 </script>
 </body>
