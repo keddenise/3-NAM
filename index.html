@@ -736,7 +736,7 @@ function openDrill(id) {
     else if (id === 'opex')         initOpexSubChart(S.opexSub);
     else if (id !== 'bonus' && tab === 'chart') initDrillChart(id);
     panel.scrollIntoView({behavior:'smooth', block:'nearest'});
-  }, 60);
+  }, id === 'tva' ? 150 : 60);
 }
 
 function setDrillTab(id, tab) { S.drillTab[id] = tab; openDrill(id); }
@@ -851,13 +851,25 @@ function buildTvaDrill() {
   return statsHtml + subCardHtml + contentTabs + `<div id="tvaContent" class="opex-content-area">${buildTvaSubContent()}</div>`;
 }
 
-function setTvaSub(sub)    { S.tvaSub = sub;    if (S.activeDrill === 'tva') openDrill('tva'); }
-function setTvaSubTab(tab) { S.tvaSubTab = tab;  if (S.activeDrill === 'tva') openDrill('tva'); }
+function setTvaSub(sub)    {
+  S.tvaSub = sub;
+  if (S.activeDrill === 'tva') {
+    openDrill('tva');
+    if (S.tvaSubTab !== 'table') setTimeout(() => initTvaSubChart(sub), 200);
+  }
+}
+function setTvaSubTab(tab) {
+  S.tvaSubTab = tab;
+  if (S.activeDrill === 'tva') {
+    openDrill('tva');
+    if (tab !== 'table') setTimeout(() => initTvaSubChart(S.tvaSub), 200);
+  }
+}
 
 function buildTvaSubContent() {
   if (!S.tvaSubTab) S.tvaSubTab = 'chart';
   if (S.tvaSubTab === 'table') return buildTvaSubTable();
-  return `<div class="drill-viz-row"><div class="drill-chart"><canvas id="tvaSubCanvas"></canvas></div>${buildTvaSubBars()}</div>`;
+  return `<div class="drill-viz-row"><div class="drill-chart" style="position:relative;height:380px;min-height:380px;"><canvas id="tvaSubCanvas" style="display:block;width:100%;height:100%;"></canvas></div>${buildTvaSubBars()}</div>`;
 }
 
 // ── TVA revenue schema — adapts to company ──────────────────
@@ -1110,12 +1122,25 @@ function buildTvaSubTable() {
 function initTvaSubChart(sub) {
   const ctx = el('tvaSubCanvas');
   if (!ctx || !S.tva) return;
+
+  // Force parent container to have explicit height so Chart.js can measure canvas
+  const parent = ctx.parentElement;
+  if (parent) {
+    parent.style.height = '380px';
+    parent.style.position = 'relative';
+  }
+  // Explicitly size canvas to prevent 0×0 render in CSS Grid
+  ctx.style.width  = '100%';
+  ctx.style.height = '100%';
+
   if (S.charts.tvaSub) { S.charts.tvaSub.destroy(); delete S.charts.tvaSub; }
   const ds  = S.tva.dashSummary;
   const tva = S.tva;
   const m   = S.month, isYTD = m === 'all';
   const opts = mkBarOpts();
   opts.interaction = {mode:'index', intersect:false};
+  opts.responsive = true;
+  opts.maintainAspectRatio = false;
 
   const tgtDS = { label:'Target', backgroundColor:'rgba(203,213,225,.55)', borderColor:'#94a3b8', borderWidth:1.5, borderRadius:4, barPercentage:.4, categoryPercentage:.9 };
   const actBase = { borderWidth:2, borderRadius:4, barPercentage:.4, categoryPercentage:.9 };
