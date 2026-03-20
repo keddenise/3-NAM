@@ -1135,22 +1135,22 @@ function initTvaSubChart(sub) {
 
     if (sub === 'revenue') {
       S.charts.tvaSub = new Chart(ctx, {type:'bar', data:{labels, datasets:[
-        {...tgtDS, label:'Revenue Target', data:labels.map(mo=>revRow[mo]?revRow[mo].target:0)},
-        {...actBase, label:'Revenue Actual', data:labels.map(mo=>revRow[mo]?revRow[mo].actual:0),
+        {...tgtDS, label:'Revenue Target', data:labels.map(mo=>rev[mo]?rev[mo].target:0)},
+        {...actBase, label:'Revenue Actual', data:labels.map(mo=>rev[mo]?rev[mo].actual:0),
          backgroundColor:'rgba(79,70,229,.3)', borderColor:C.indigo}
       ]}, options:opts});
 
     } else if (sub === 'expenses') {
       S.charts.tvaSub = new Chart(ctx, {type:'bar', data:{labels, datasets:[
-        {...tgtDS, label:'Expense Target', data:labels.map(mo=>expRow[mo]?expRow[mo].target:0)},
-        {...actBase, label:'Expense Actual', data:labels.map(mo=>expRow[mo]?expRow[mo].actual:0),
+        {...tgtDS, label:'Expense Target', data:labels.map(mo=>exp[mo]?exp[mo].target:0)},
+        {...actBase, label:'Expense Actual', data:labels.map(mo=>exp[mo]?exp[mo].actual:0),
          backgroundColor:'rgba(249,115,22,.3)', borderColor:C.orange2}
       ]}, options:opts});
 
     } else { // ni — monthly bars
-      const acts = labels.map(mo => niRow[mo]?niRow[mo].actual:0);
+      const acts = labels.map(mo => ni[mo]?ni[mo].actual:0);
       S.charts.tvaSub = new Chart(ctx, {type:'bar', data:{labels, datasets:[
-        {...tgtDS, label:'NI Target', data:labels.map(mo=>niRow[mo]?niRow[mo].target:0)},
+        {...tgtDS, label:'NI Target', data:labels.map(mo=>ni[mo]?ni[mo].target:0)},
         {...actBase, label:'NI Actual', data:acts,
          backgroundColor:acts.map(v=>v>=0?'rgba(34,197,94,.3)':'rgba(239,68,68,.3)'),
          borderColor:acts.map(v=>v>=0?C.green2:C.red2)}
