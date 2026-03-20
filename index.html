@@ -1278,7 +1278,7 @@ function setOpexSubTab(tab){S.opexSubTab=tab; if(S.activeDrill==='opex') openDri
 function buildOpexSubContent(){
   if(!S.opexSubTab) S.opexSubTab='chart';
   if(S.opexSubTab==='table') return buildOpexSubTable();
-  return `<div class="drill-viz-row"><div class="drill-chart"><canvas id="opexSubCanvas"></canvas></div>${buildOpexSubBars()}</div>`;
+  return `<div class="drill-viz-row"><div class="tva-chart-wrap"><canvas id="opexSubCanvas"></canvas></div>${buildOpexSubBars()}</div>`;
 }
 function buildOpexSubBars(){
   const sub=S.opexSub; let items=[];
@@ -1406,6 +1406,32 @@ function buildGATable(){
   const rows=items.map(it=>`<tr><td>${it.l}</td>${MONTHS.map(m=>`<td class="num">${peso(it.data[m]||0)}</td>`).join('')}<td class="num" style="font-weight:600">${peso(it.data.YTD||0)}</td></tr>`).join('');
   const totRow=`<tr class="tot"><td>Total G&A</td>${MONTHS.map(m=>`<td class="num">${peso(sd.opex.gaExpenses[m]||0)}</td>`).join('')}<td class="num">${peso(sd.opex.gaExpenses.YTD||0)}</td></tr>`;
   return `<div class="tbl-scroll"><table class="data-table">${H2}<tbody>${rows}${totRow}</tbody></table></div>`;
+}
+function initOpexSubChart(sub){
+  const ctx=el('opexSubCanvas'); if(!ctx) return;
+  if(S.charts.opexSub){S.charts.opexSub.destroy();delete S.charts.opexSub;}
+  const sd=S.sum,d=S.data.monthlyTrend,opts=mkBarOpts();
+  opts.interaction={mode:'index',intersect:false};
+  if(sub==='comp'){
+    const compData=sd?MONTHS.map(m=>sd.compensation.total[m]||0):d.opex.map(v=>v*0.36);
+    S.charts.opexSub=new Chart(ctx,{type:'bar',data:{labels:MONTHS,datasets:[
+      {label:'Compensation',data:compData,backgroundColor:'rgba(29,78,216,.2)',borderColor:C.blue,borderWidth:2,borderRadius:5},
+      {label:'Total OpEx',data:d.opex,type:'line',borderColor:C.orange2,backgroundColor:'transparent',tension:.4,pointRadius:3,borderWidth:2,borderDash:[5,3]}
+    ]},options:opts});
+  } else if(sub==='ga'){
+    const gaData=sd?MONTHS.map(m=>sd.opex.gaExpenses[m]||0):d.opex.map(v=>v*0.4);
+    S.charts.opexSub=new Chart(ctx,{type:'bar',data:{labels:MONTHS,datasets:[
+      {label:'G&A Expenses',data:gaData,backgroundColor:'rgba(79,70,229,.2)',borderColor:'#4f46e5',borderWidth:2,borderRadius:5},
+      {label:'Total OpEx',data:d.opex,type:'line',borderColor:C.orange2,backgroundColor:'transparent',tension:.4,pointRadius:3,borderWidth:2,borderDash:[5,3]}
+    ]},options:opts});
+  } else {
+    const staffData=sd?MONTHS.map(m=>sd.opex.staffCommission[m]||0):[];
+    const salesData=sd?MONTHS.map(m=>sd.opex.salesCommission[m]||0):[];
+    S.charts.opexSub=new Chart(ctx,{type:'bar',data:{labels:MONTHS,datasets:[
+      {label:'Staff Commission',data:staffData,backgroundColor:'rgba(59,130,246,.25)',borderColor:C.blue2,borderWidth:2,borderRadius:5},
+      {label:'Sales Commission',data:salesData,backgroundColor:'rgba(249,115,22,.25)',borderColor:C.orange2,borderWidth:2,borderRadius:5}
+    ]},options:opts});
+  }
 }
 function mkLineOpts(){return{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{labels:{color:C.text,font:{size:11},boxWidth:10,padding:12}},tooltip:{backgroundColor:'#fff',borderColor:C.border,borderWidth:1.5,titleColor:C.text,bodyColor:C.muted,padding:10,cornerRadius:8,callbacks:{label:c=>' '+c.dataset.label+': '+peso(c.raw)}}},scales:{x:{grid:{display:false},ticks:{color:C.muted,font:{size:10}}},y:{grid:{color:'#f1f5f9'},ticks:{color:C.muted,font:{size:10},callback:v=>peso(v,true)}}}};}
 function mkBarOpts(){return{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:C.text,font:{size:11},boxWidth:10,padding:12}},tooltip:{backgroundColor:'#fff',borderColor:C.border,borderWidth:1.5,titleColor:C.text,bodyColor:C.muted,padding:10,cornerRadius:8,callbacks:{label:c=>' '+c.dataset.label+': '+peso(c.raw)}}},scales:{x:{grid:{display:false},ticks:{color:C.muted,font:{size:10}}},y:{grid:{color:'#f1f5f9'},ticks:{color:C.muted,font:{size:10},callback:v=>peso(v,true)}}}};}
