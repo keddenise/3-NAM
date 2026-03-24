@@ -287,7 +287,6 @@ body{font-family:var(--bs-body-font-family);background:var(--bs-body-bg);}
 <div class="container-xl py-4 px-3 px-md-4">
   <div class="status-alert loading" id="statusEl"><span class="spin"></span>&nbsp; Connecting to Google Sheets…</div>
 
-  <!-- NAM Trading / Builders IS view -->
   <div id="view-is">
     <div class="period-head" id="periodHead" style="display:none;">
       <div>
@@ -329,7 +328,6 @@ body{font-family:var(--bs-body-font-family);background:var(--bs-body-bg);}
     </div>
   </div>
 
-  <!-- ALM Manpower view -->
   <div id="view-alm" style="display:none;">
     <div class="period-head" id="almPeriodHead" style="display:none;">
       <div>
@@ -478,7 +476,8 @@ async function fetchData() {
 }
 
 async function fetchAlm(apiUrl, cb, controller) {
-  const res = await fetch(apiUrl + '?action=getSummary&year=' + S.year + '&cb=' + cb, {signal: controller.signal});
+  // ADDED redirect: 'follow'
+  const res = await fetch(apiUrl + '?action=getSummary&year=' + S.year + '&cb=' + cb, {signal: controller.signal, redirect: 'follow'});
   if (!res.ok) throw new Error('HTTP ' + res.status);
   const json = await res.json();
   if (!json.success) throw new Error(json.error || 'Fetch failed');
@@ -492,9 +491,10 @@ async function fetchAlm(apiUrl, cb, controller) {
 
 async function fetchNam(apiUrl, cb, controller) {
   const tvaUrl = APIS_TVA[S.company];
-  const isPromise  = fetch(apiUrl + '?action=getSummary&year=' + S.year + '&cb=' + cb, {signal: controller.signal});
+  // ADDED redirect: 'follow'
+  const isPromise  = fetch(apiUrl + '?action=getSummary&year=' + S.year + '&cb=' + cb, {signal: controller.signal, redirect: 'follow'});
   const tvaPromise = tvaUrl
-    ? fetch(tvaUrl + '?action=getTargetVsActual&year=' + S.year + '&cb=' + cb, {signal: controller.signal})
+    ? fetch(tvaUrl + '?action=getTargetVsActual&year=' + S.year + '&cb=' + cb, {signal: controller.signal, redirect: 'follow'})
     : Promise.resolve(null);
   const [isRes, tvaRes] = await Promise.all([isPromise, tvaPromise]);
   if (!isRes.ok) throw new Error('HTTP ' + isRes.status);
