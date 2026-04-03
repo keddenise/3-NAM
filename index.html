@@ -883,7 +883,6 @@ function initAlmGaSubChart(sub) {
   const d = S.almData, m = S.month, isAll = m === 'all';
   const g = obj => obj ? (isAll ? (obj.YTD||0) : (obj[m]||0)) : 0;
 
-  // ── shared donut options ──────────────────────────────────────────────────
   const donutOpts = {
     responsive: true, maintainAspectRatio: false, cutout: '62%',
     plugins: {
@@ -960,15 +959,15 @@ function buildAlmTvaDrill() {
   return stats + `<div style="height:320px;margin-top:16px;"><canvas id="almDrillCanvas"></canvas></div>`;
 }
 
-// ─── ALM DRILL CHART (with alm-ga routing fix) ───────────────────────────────
+// ═══════════════════════════════════════════════════════════════
+//  FIX 1: ALM DRILL CHART — client revenue bar uses correct axis labels
+// ═══════════════════════════════════════════════════════════════
 function initAlmDrillChart(id) {
-  // ← FIXED: route alm-ga to sub-chart instead of almDrillCanvas
   if (id === 'alm-ga') { initAlmGaSubChart(S.almGaSub); return; }
 
   const ctx = el('almDrillCanvas'); if (!ctx) return;
   if (S.charts.almDrill) { S.charts.almDrill.destroy(); delete S.charts.almDrill; }
-  const d = S.almData, opts = mkBarOpts();
-  opts.responsive = true; opts.maintainAspectRatio = false;
+  const d = S.almData;
   const revArr  = MONTHS.map(m=>d.revenues.totalRevenue[m]||0);
   const gaArr   = MONTHS.map(m=>d.gaExpenses.total[m]||0);
   const niArr   = MONTHS.map(m=>d.netIncome[m]||0);
@@ -979,32 +978,149 @@ function initAlmDrillChart(id) {
   const actIdx  = actMths.map(m=>MONTHS.indexOf(m));
   const filt    = arr => actIdx.map(i=>arr[i]);
 
+  // ── SHARED tooltip config ──────────────────────────────────────
+  const sharedTooltip = {
+    backgroundColor:'#fff', borderColor:C.border, borderWidth:1.5,
+    titleColor:C.text, bodyColor:C.muted, padding:10, cornerRadius:8,
+    callbacks:{ label: c => ' ' + c.dataset.label + ': ' + peso(c.raw) }
+  };
+  const sharedLegend = { labels:{ color:C.text, font:{size:11}, boxWidth:10, padding:12 } };
+
+  // ── FIX: Client Revenue horizontal bar — custom opts (no peso on y-axis) ──
   if (id === 'alm-revenue') {
-    const m2 = S.month, isAll = m2 === 'all';
-    const g = obj => obj?(isAll?(obj.YTD||0):(obj[m2]||0)):0;
+    const mth = S.month, isAll = mth === 'all';
+    const g = obj => obj?(isAll?(obj.YTD||0):(obj[mth]||0)):0;
     const sorted = [...d.clients].sort((a,b)=>g(b.revenue)-g(a.revenue)).filter(c=>g(c.revenue)>0);
     const colors = ['#f97316','#fb923c','#fdba74','#fed7aa','#c2410c','#ea580c','#f59e0b','#fbbf24','#d97706','#b45309'];
-    S.charts.almDrill = new Chart(ctx,{type:'bar',data:{labels:sorted.map(c=>c.name),datasets:[{label:'Service Revenue',data:sorted.map(c=>g(c.revenue)),backgroundColor:sorted.map((_,i)=>colors[i%colors.length]+'55'),borderColor:sorted.map((_,i)=>colors[i%colors.length]),borderWidth:2,borderRadius:5}]},options:{...opts,indexAxis:'y',plugins:{...opts.plugins,legend:{display:false}}}});
+
+    S.charts.almDrill = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: sorted.map(c => c.name),   // ← client names as labels
+        datasets: [{
+          label: 'Service Revenue',
+          data: sorted.map(c => g(c.revenue)),
+          backgroundColor: sorted.map((_,i) => colors[i % colors.length] + '55'),
+          borderColor: sorted.map((_,i) => colors[i % colors.length]),
+          borderWidth: 2,
+          borderRadius: 5
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor:'#fff', borderColor:C.border, borderWidth:1.5,
+            titleColor:C.text, bodyColor:C.muted, padding:10, cornerRadius:8,
+            callbacks:{ label: c => ' Service Revenue: ' + peso(c.raw) }
+          }
+        },
+        scales: {
+          // y-axis = categorical (client names) — NO formatter
+          y: {
+            grid: { display: false },
+            ticks: {
+              color: C.text,
+              font: { size: 10, weight: '600' },
+              // No callback → shows label string as-is
+            }
+          },
+          // x-axis = numeric revenue — use peso formatter
+          x: {
+            grid: { color: '#f1f5f9' },
+            ticks: {
+              color: C.muted,
+              font: { size: 10 },
+              callback: v => peso(v, true)
+            }
+          }
+        }
+      }
+    });
     return;
   }
+
   if (id === 'alm-hc') {
     S.charts.almDrill = new Chart(ctx,{type:'bar',data:{labels:actMths,datasets:[
       {label:'Headcount',data:filt(hcArr),backgroundColor:'rgba(79,70,229,.3)',borderColor:C.indigo,borderWidth:2,borderRadius:5,yAxisID:'yHC'},
       {label:'Working Days',data:filt(wdArr),type:'line',borderColor:C.orange2,backgroundColor:'transparent',tension:.4,pointRadius:4,borderWidth:2.5,yAxisID:'yWD'}
-    ]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},scales:{yHC:{type:'linear',position:'left',grid:{color:'#f1f5f9'},ticks:{color:C.indigo,font:{size:10}}},yWD:{type:'linear',position:'right',grid:{drawOnChartArea:false},ticks:{color:C.orange2,font:{size:10}}}},plugins:{legend:{labels:{color:C.text,font:{size:11},boxWidth:10}},tooltip:{backgroundColor:'#fff',borderColor:C.border,borderWidth:1.5,titleColor:C.text,bodyColor:C.muted,padding:10,cornerRadius:8}}}}); return;
+    ]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},scales:{yHC:{type:'linear',position:'left',grid:{color:'#f1f5f9'},ticks:{color:C.indigo,font:{size:10}}},yWD:{type:'linear',position:'right',grid:{drawOnChartArea:false},ticks:{color:C.orange2,font:{size:10}}}},plugins:{legend:{labels:{color:C.text,font:{size:11},boxWidth:10}},tooltip:sharedTooltip}}}); return;
   }
+
   if (id === 'alm-gp') {
     S.charts.almDrill = new Chart(ctx,{type:'bar',data:{labels:actMths,datasets:[
       {label:'Revenue',data:filt(revArr),backgroundColor:'rgba(249,115,22,.2)',borderColor:C.orange2,borderWidth:2,borderRadius:5},
       {label:'Gross Profit',data:filt(gpArr),backgroundColor:'rgba(34,197,94,.25)',borderColor:C.green2,borderWidth:2,borderRadius:5}
-    ]},options:{...opts,interaction:{mode:'index',intersect:false}}}); return;
+    ]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:sharedLegend,tooltip:sharedTooltip},scales:{x:{grid:{display:false},ticks:{color:C.muted,font:{size:10}}},y:{grid:{color:'#f1f5f9'},ticks:{color:C.muted,font:{size:10},callback:v=>peso(v,true)}}}}}); return;
   }
+
+  // ── FIX 3: Net Income drill — waterfall-style bars ────────────────────────
   if (id === 'alm-ni') {
-    S.charts.almDrill = new Chart(ctx,{type:'bar',data:{labels:actMths,datasets:[
-      {label:'Net Income',data:filt(niArr),backgroundColor:filt(niArr).map(v=>v>=0?'rgba(34,197,94,.3)':'rgba(239,68,68,.3)'),borderColor:filt(niArr).map(v=>v>=0?C.green2:C.red2),borderWidth:2,borderRadius:5},
-      {label:'Revenue',data:filt(revArr),type:'line',borderColor:C.orange2,backgroundColor:'transparent',tension:.4,pointRadius:3,borderWidth:2}
-    ]},options:{...opts,interaction:{mode:'index',intersect:false}}}); return;
+    const niFiltered = filt(niArr);
+    const revFiltered = filt(revArr);
+    S.charts.almDrill = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: actMths,
+        datasets: [
+          {
+            label: 'Net Income',
+            data: niFiltered,
+            backgroundColor: niFiltered.map(v => v >= 0 ? 'rgba(34,197,94,.35)' : 'rgba(239,68,68,.35)'),
+            borderColor: niFiltered.map(v => v >= 0 ? C.green2 : C.red2),
+            borderWidth: 2,
+            borderRadius: 6,
+            borderSkipped: false,
+            yAxisID: 'yNI',
+            order: 2,
+            barPercentage: .7,
+            categoryPercentage: .8
+          },
+          {
+            label: 'Revenue',
+            data: revFiltered,
+            type: 'line',
+            borderColor: C.orange2,
+            backgroundColor: C.orangeA,
+            fill: 'origin',
+            tension: .4,
+            pointRadius: 4,
+            borderWidth: 2.5,
+            pointBackgroundColor: '#fff',
+            pointBorderWidth: 2,
+            pointBorderColor: C.orange2,
+            yAxisID: 'yRev',
+            order: 1
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode:'index', intersect:false },
+        plugins: { legend: sharedLegend, tooltip: sharedTooltip },
+        scales: {
+          x: { grid:{ display:false }, ticks:{ color:C.muted, font:{size:10} } },
+          yRev: {
+            position: 'left',
+            grid: { color:'#f1f5f9' },
+            ticks: { color:C.orange2, font:{size:10}, callback:v=>peso(v,true) }
+          },
+          yNI: {
+            position: 'right',
+            grid: { drawOnChartArea:false },
+            ticks: { color:C.muted, font:{size:10}, callback:v=>peso(v,true) },
+            afterDataLimits(scale){ const abs=Math.max(Math.abs(scale.min),Math.abs(scale.max)); scale.min=-abs*1.1; scale.max=abs*1.1; }
+          }
+        }
+      }
+    });
+    return;
   }
+
   if (id === 'alm-tva' && S.almTva) {
     const tva = S.almTva;
     const niMo = tva.netIncome?.monthly||{};
@@ -1017,22 +1133,111 @@ function initAlmDrillChart(id) {
       {label:'Revenue Target',data:revTgt,backgroundColor:'rgba(203,213,225,.5)',borderColor:'#94a3b8',borderWidth:1.5,borderRadius:4,yAxisID:'yRev'},
       {label:'Revenue Actual',data:revAct,backgroundColor:'rgba(249,115,22,.3)',borderColor:C.orange2,borderWidth:2,borderRadius:4,yAxisID:'yRev'},
       {label:'Net Income',data:niAct,type:'line',borderColor:niAct.map(v=>v>=0?C.green2:C.red2),backgroundColor:'transparent',tension:.4,pointRadius:4,borderWidth:2,yAxisID:'yNI'}
-    ]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},scales:{yRev:{type:'linear',position:'left',grid:{color:'#f1f5f9'},ticks:{color:C.orange2,font:{size:10},callback:v=>peso(v,true)}},yNI:{type:'linear',position:'right',grid:{drawOnChartArea:false},ticks:{color:C.green2,font:{size:10},callback:v=>peso(v,true)}}},plugins:{legend:{labels:{color:C.text,font:{size:11},boxWidth:10}},tooltip:{backgroundColor:'#fff',borderColor:C.border,borderWidth:1.5,titleColor:C.text,bodyColor:C.muted,padding:10,cornerRadius:8,callbacks:{label:c=>' '+c.dataset.label+': '+peso(c.raw)}}}}}); return;
+    ]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},scales:{yRev:{type:'linear',position:'left',grid:{color:'#f1f5f9'},ticks:{color:C.orange2,font:{size:10},callback:v=>peso(v,true)}},yNI:{type:'linear',position:'right',grid:{drawOnChartArea:false},ticks:{color:C.green2,font:{size:10},callback:v=>peso(v,true)}}},plugins:{legend:{labels:{color:C.text,font:{size:11},boxWidth:10}},tooltip:sharedTooltip}}}); return;
   }
 }
 
-// ─── ALM BOTTOM CHARTS ────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════
+//  FIX 2: ALM BOTTOM TREND — mixed bar+line (waterfall style like NAM)
+// ═══════════════════════════════════════════════════════════════
 function renderAlmTrend() {
   const d = S.almData; if (!d) return;
   if(S.charts.almChartTrend){S.charts.almChartTrend.destroy();delete S.charts.almChartTrend;}
+
   const revArr = MONTHS.map(m=>d.revenues.totalRevenue[m]||0);
   const gaArr  = MONTHS.map(m=>d.gaExpenses.total[m]||0);
   const niArr  = MONTHS.map(m=>d.netIncome[m]||0);
-  S.charts.almChartTrend = new Chart(el('almChartTrend'),{type:'line',data:{labels:MONTHS,datasets:[
-    {label:'Revenue',data:revArr,borderColor:C.orange2,backgroundColor:C.orangeA,fill:true,tension:.4,pointRadius:3,borderWidth:2},
-    {label:'G&A Expenses',data:gaArr,borderColor:C.red2,backgroundColor:C.redA,fill:true,tension:.4,pointRadius:3,borderWidth:2},
-    {label:'Net Income',data:niArr,borderColor:C.teal2,backgroundColor:'transparent',fill:false,tension:.4,pointRadius:3,borderWidth:2,borderDash:[5,3]}
-  ]},options:mkLineOpts()});
+
+  S.charts.almChartTrend = new Chart(el('almChartTrend'), {
+    type: 'bar',
+    data: {
+      labels: MONTHS,
+      datasets: [
+        // Revenue bars (orange, positive)
+        {
+          label: 'Revenue',
+          data: revArr,
+          backgroundColor: 'rgba(249,115,22,.25)',
+          borderColor: C.orange2,
+          borderWidth: 1.5,
+          borderRadius: 4,
+          yAxisID: 'yRev',
+          order: 3,
+          barPercentage: .7,
+          categoryPercentage: .85
+        },
+        // G&A bars (red, shown as positive values for visibility)
+        {
+          label: 'G&A Expenses',
+          data: gaArr,
+          backgroundColor: 'rgba(239,68,68,.2)',
+          borderColor: C.red2,
+          borderWidth: 1.5,
+          borderRadius: 4,
+          yAxisID: 'yRev',
+          order: 2,
+          barPercentage: .7,
+          categoryPercentage: .85
+        },
+        // Net Income line with colored points
+        {
+          label: 'Net Income',
+          data: niArr,
+          type: 'line',
+          borderColor: C.teal2,
+          backgroundColor: 'transparent',
+          tension: .4,
+          pointRadius: 5,
+          pointBackgroundColor: niArr.map(v => v >= 0 ? C.green2 : C.red2),
+          pointBorderColor: niArr.map(v => v >= 0 ? C.green2 : C.red2),
+          pointBorderWidth: 2,
+          borderWidth: 2,
+          borderDash: [5, 3],
+          fill: false,
+          yAxisID: 'yNI',
+          order: 1
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode:'index', intersect:false },
+      plugins: {
+        legend: {
+          labels: { color:C.text, font:{size:11}, boxWidth:10, padding:12 }
+        },
+        tooltip: {
+          backgroundColor:'#fff', borderColor:C.border, borderWidth:1.5,
+          titleColor:C.text, bodyColor:C.muted, padding:10, cornerRadius:8,
+          callbacks: { label: c => ' ' + c.dataset.label + ': ' + peso(c.raw) }
+        }
+      },
+      scales: {
+        x: {
+          grid: { display:false },
+          ticks: { color:C.muted, font:{size:10} }
+        },
+        yRev: {
+          type: 'linear',
+          position: 'left',
+          grid: { color:'#f1f5f9' },
+          ticks: { color:C.orange2, font:{size:10}, callback: v => peso(v,true) }
+        },
+        yNI: {
+          type: 'linear',
+          position: 'right',
+          grid: { drawOnChartArea:false },
+          ticks: { color:C.teal2, font:{size:10}, callback: v => peso(v,true) },
+          afterDataLimits(scale){
+            const abs = Math.max(Math.abs(scale.min), Math.abs(scale.max));
+            scale.min = -abs * 1.1;
+            scale.max = abs * 1.1;
+          }
+        }
+      }
+    }
+  });
 }
 
 function renderAlmHcChart() {
@@ -1050,7 +1255,7 @@ function renderAlmHcChart() {
 }
 
 // ═══════════════════════════════════════════════════════════════
-//  NAM Trading / Builders
+//  NAM Trading / Builders (unchanged)
 // ═══════════════════════════════════════════════════════════════
 function getVals() {
   const d = S.data, m = S.month, isAll = m === 'all', i = MONTHS.indexOf(m);
@@ -1159,8 +1364,7 @@ function openDrill(id){
 }
 function setDrillTab(id,tab){S.drillTab[id]=tab;openDrill(id);}
 
-function buildTvaDrill(){
-  if(!S.tva||!S.tva.kpi||!S.tva.kpi.revenue){const raw=S.tva?JSON.stringify(S.tva).slice(0,400):'null';return`<div class="p-4"><p style="color:var(--red);font-weight:600;font-size:13px;">⚠ TVA data structure error</p><p style="color:var(--gray500);font-size:12px;margin-top:8px;">Check that <code>getTargetVsActual</code> exists in your deployed Apps Script and that the <strong>INPUT</strong> sheet exists.</p><details style="margin-top:12px;"><summary style="font-size:11px;color:var(--gray500);cursor:pointer;">Raw API response (debug)</summary><pre style="font-size:10px;margin-top:8px;padding:8px;background:var(--gray50);border-radius:6px;overflow:auto;max-height:200px;">${raw}</pre></details></div>`;}
+function buildTvaDrill(){if(!S.tva||!S.tva.kpi||!S.tva.kpi.revenue){const raw=S.tva?JSON.stringify(S.tva).slice(0,400):'null';return`<div class="p-4"><p style="color:var(--red);font-weight:600;font-size:13px;">⚠ TVA data structure error</p><p style="color:var(--gray500);font-size:12px;margin-top:8px;">Check that <code>getTargetVsActual</code> exists in your deployed Apps Script and that the <strong>INPUT</strong> sheet exists.</p><details style="margin-top:12px;"><summary style="font-size:11px;color:var(--gray500);cursor:pointer;">Raw API response (debug)</summary><pre style="font-size:10px;margin-top:8px;padding:8px;background:var(--gray50);border-radius:6px;overflow:auto;max-height:200px;">${raw}</pre></details></div>`;}
   const kpi=S.tva.kpi;
   const tv=(()=>{const m=S.month,isYTD=m==='all',tva=S.tva;const revTotal=tva.revenue&&tva.revenue.total;const expTotal=tva.expenses&&tva.expenses.total;const niData=tva.netIncome;const rRow=isYTD?null:((revTotal&&revTotal.monthly&&revTotal.monthly[m])||{});const eRow=isYTD?null:((expTotal&&expTotal.monthly&&expTotal.monthly[m])||{});const nRow=isYTD?null:((niData&&niData.monthly&&niData.monthly[m])||{});const rA=isYTD?(kpi.revenue.ytdActual||0):(rRow.actual||0);const rT=isYTD?(kpi.revenue.ytdTarget||0):(rRow.target||kpi.revenue.monthlyTarget||0);const eA=isYTD?(kpi.expenses.ytdActual||0):(eRow.actual||0);const eT=isYTD?(kpi.expenses.ytdTarget||0):(eRow.target||kpi.expenses.monthlyTarget||0);const nA=isYTD?(kpi.netIncome.ytdActual||0):(nRow.actual||0);const nT=isYTD?(kpi.netIncome.ytdTarget||0):(nRow.target||kpi.netIncome.monthlyTarget||0);return{revActual:rA,revTarget:rT,expActual:eA,expTarget:eT,niActual:nA,niTarget:nT,revPct:rT!==0?(rA/rT*100):0,expPct:eT!==0?(eA/eT*100):0,niPct:nT!==0?(nA/nT*100):0,isYTD,label:isYTD?'YTD':m};})();
   const statsHtml=`<div class="drill-stats" style="margin-bottom:16px;"><div class="dstat highlight"><div class="dstat-val">${tv.revPct.toFixed(1)}%</div><div class="dstat-lbl">Revenue Achievement · ${tv.label}</div></div><div class="dstat"><div class="dstat-val">${peso(tv.revActual,true)}</div><div class="dstat-lbl">Revenue Actual</div></div><div class="dstat"><div class="dstat-val">${peso(tv.revTarget,true)}</div><div class="dstat-lbl">Revenue Target</div></div><div class="dstat"><div class="dstat-val" style="color:${tv.niActual>=0?'var(--green)':'var(--red)'}">${peso(tv.niActual,true)}</div><div class="dstat-lbl">Net Income Actual</div></div></div>`;
@@ -1168,8 +1372,7 @@ function buildTvaDrill(){
   const subCards=[{id:'revenue',cls:'sc-tva-rev',icon:'bi-cash-coin',label:`Revenue · ${tv.label}`,val:tv.revActual,tgt:tv.revTarget,pct:tv.revPct,isExp:false},{id:'expenses',cls:'sc-tva-exp',icon:'bi-receipt',label:`Expenses · ${tv.label}`,val:tv.expActual,tgt:tv.expTarget,pct:tv.expPct,isExp:true},{id:'ni',cls:'sc-tva-ni',icon:'bi-graph-up',label:`Net Income · ${tv.label}`,val:tv.niActual,tgt:tv.niTarget,pct:tv.niPct,isExp:false}];
   const subCardHtml=`<div class="row g-2 mb-3">${subCards.map(sc=>{const barPct=sc.tgt!==0?Math.min(Math.abs(sc.val/sc.tgt)*100,100).toFixed(1):0;return`<div class="col-12 col-sm-4"><div class="opex-sub-card ${sc.cls}${S.tvaSub===sc.id?' active':''}" onclick="setTvaSub('${sc.id}')"><div class="sc-label"><i class="bi ${sc.icon} me-1"></i>${sc.label}</div><div class="sc-value">${peso(sc.val,true)}</div><div class="sc-pct">vs target ${peso(sc.tgt,true)}</div>${achBadge(sc.pct,sc.isExp)}<div class="sc-bar-track"><div class="sc-bar-fill" style="width:${barPct}%"></div></div></div></div>`;}).join('')}</div>`;
   const contentTabs=`<div class="drill-tabs" style="margin-bottom:16px;"><button class="dtab${S.tvaSubTab!=='table'?' active':''}" onclick="setTvaSubTab('chart')"><i class="bi bi-bar-chart me-1"></i>Chart</button><button class="dtab${S.tvaSubTab==='table'?' active':''}" onclick="setTvaSubTab('table')"><i class="bi bi-table me-1"></i>Table</button></div>`;
-  return statsHtml+subCardHtml+contentTabs+`<div id="tvaContent" class="opex-content-area">${buildTvaSubContent()}</div>`;
-}
+  return statsHtml+subCardHtml+contentTabs+`<div id="tvaContent" class="opex-content-area">${buildTvaSubContent()}</div>`;}
 function setTvaSub(sub){S.tvaSub=sub;if(S.activeDrill==='tva')openDrill('tva');}
 function setTvaSubTab(tab){S.tvaSubTab=tab;if(S.activeDrill==='tva')openDrill('tva');}
 function buildTvaSubContent(){if(!S.tvaSubTab)S.tvaSubTab='chart';if(S.tvaSubTab==='table')return buildTvaSubTable();return`<div class="drill-viz-row"><div class="tva-chart-wrap"><canvas id="tvaSubCanvas"></canvas></div>${buildTvaSubBars()}</div>`;}
@@ -1178,25 +1381,13 @@ function getTvaExpSchema(){const co=S.company;if(co==='trading'){return[{l:'Sala
 function buildTvaSubBars(){if(!S.tva)return'';const sub=S.tvaSub,tva=S.tva,m=S.month,isYTD=m==='all';const getA=row=>!row?0:(isYTD?(row.ytd?row.ytd.actual:0):((row.monthly&&row.monthly[m])?row.monthly[m].actual:0));const getT=row=>!row?0:(isYTD?(row.ytd?row.ytd.target:0):((row.monthly&&row.monthly[m])?row.monthly[m].target:0));const lbl=isYTD?'YTD':m;let items=[],title='';if(sub==='revenue'){title=`Revenue Line Items · ${lbl}`;const rev=tva.revenue;const revSchema=getTvaRevSchema();items=revSchema.map(s=>({l:s.l,v:rev[s.key]?getA(rev[s.key]):0,t:rev[s.key]?getT(rev[s.key]):0,c:s.c})).filter(i=>i.t>0||i.v>0);}else if(sub==='expenses'){title=`Top Expenses vs Target · ${lbl}`;const exp=tva.expenses;const eMap=getTvaExpSchema();items=eMap.map(i=>({l:i.l,v:exp[i.k]?getA(exp[i.k]):0,t:exp[i.k]?getT(exp[i.k]):0,c:i.c})).filter(i=>i.t>0||i.v>0).sort((a,b)=>b.v-a.v).slice(0,8);}else{if(isYTD){title='Net Income by Month';const niRowM=(tva.netIncome&&tva.netIncome.monthly)||{};items=MONTHS.filter(mo=>niRowM[mo]&&(niRowM[mo].actual!==0||niRowM[mo].target!==0)).map(mo=>({l:mo,v:niRowM[mo].actual,t:niRowM[mo].target,c:niRowM[mo].actual>=0?C.green2:C.red2}));}else{title=`${m} Overview`;const revRow=(tva.revenue&&tva.revenue.total&&tva.revenue.total.monthly&&tva.revenue.total.monthly[m])||{};const expRow=(tva.expenses&&tva.expenses.total&&tva.expenses.total.monthly&&tva.expenses.total.monthly[m])||{};const niRow=(tva.netIncome&&tva.netIncome.monthly&&tva.netIncome.monthly[m])||{};items=[{l:'Revenue',v:revRow.actual||0,t:revRow.target||0,c:C.indigo},{l:'Expenses',v:expRow.actual||0,t:expRow.target||0,c:C.orange2},{l:'Net Income',v:niRow.actual||0,t:niRow.target||0,c:(niRow.actual||0)>=0?C.green2:C.red2}].filter(i=>i.t!==0||i.v!==0);}}if(!items.length)return`<div class="drill-viz-bars"><p style="font-size:11px;color:#94a3b8;padding-top:20px;">No data yet for this period.</p></div>`;const max=Math.max(...items.map(i=>Math.max(Math.abs(i.v),Math.abs(i.t||0))),1);const bars=items.map(it=>{const achPct=it.t!==0?((Math.abs(it.v)/Math.abs(it.t))*100).toFixed(0):'—';const barW=(Math.min(Math.abs(it.v)/max,1)*100).toFixed(1);return`<div class="mb"><div class="mb-top"><span class="mb-name"><span class="mb-dot" style="background:${it.c}"></span>${it.l}</span><span class="mb-val">${peso(it.v,true)} <span style="color:#94a3b8;font-size:10px">${achPct!=='—'?achPct+'%':'—'}</span></span></div><div class="mb-track"><div class="mb-fill" style="width:${barW}%;background:${it.c}"></div></div></div>`;}).join('');return`<div class="drill-viz-bars"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#94a3b8;margin-bottom:10px;">${title}</div>${bars}</div>`;}
 function buildTvaSubTable(){if(!S.tva)return'<p class="p-3 text-muted small">No TVA data.</p>';const sub=S.tvaSub,tva=S.tva,m=S.month,isYTD=m==='all';const wrap=html=>`<div class="tbl-scroll">${html}</div>`;const H=cols=>'<thead><tr>'+cols.map((c,i)=>`<th${i?' class="num"':''}>${c}</th>`).join('')+'</tr></thead>';const statusBadge=(actual,target,isExp)=>{if(actual===0&&target===0)return'<span style="color:#94a3b8">—</span>';const met=isExp?actual<=target:actual>=target;return met?'✅':'❌';};const rowVals=(d2)=>{if(!d2)return{a:0,t:0,v:0};if(isYTD){const ytd=d2.ytd||{};return{a:ytd.actual||0,t:ytd.target||0,v:ytd.variance||0};}const mo=(d2.monthly&&d2.monthly[m])||{};const a=mo.actual||0,t=mo.target||0;return{a,t,v:a-t};};const colHeader=isYTD?'YTD ACTUAL':`${m} ACTUAL`;const varHeader=isYTD?'YTD VARIANCE':`${m} VARIANCE`;if(sub==='revenue'){const rev=tva.revenue;const revSchema=getTvaRevSchema();const items=revSchema.map(s=>({l:s.l,d:rev[s.key]||null})).filter(it=>it.d);const totItem={l:'TOTAL REVENUE',d:rev.total,isTot:true};if(isYTD){return wrap('<table class="data-table">'+H(['DESCRIPTION','MONTHLY TARGET',...MONTHS,'YTD ACTUAL','YTD VARIANCE','%','✓'])+'<tbody>'+[...items,totItem].map(it=>{if(!it.d)return'';const{a,t,v}=rowVals(it.d);const achP=t!==0?((a/t)*100).toFixed(1)+'%':'—';const mCells=MONTHS.map(mo=>`<td class="num">${peso(it.d.monthly[mo]?it.d.monthly[mo].actual:0)}</td>`).join('');return`<tr${it.isTot?' class="tot"':''}><td>${it.l}</td><td class="num">${peso(it.d.monthlyTarget)}</td>${mCells}<td class="num" style="font-weight:600">${peso(a)}</td><td class="num ${v>=0?'vp':'vn'}">${v>=0?'+':''}${peso(v)}</td><td class="num">${achP}</td><td class="num">${statusBadge(a,t,false)}</td></tr>`;}).join('')+'</tbody></table>');}else{return wrap('<table class="data-table">'+H(['DESCRIPTION','TARGET',colHeader,varHeader,'%','✓'])+'<tbody>'+[...items,totItem].map(it=>{if(!it.d)return'';const{a,t,v}=rowVals(it.d);const achP=t!==0?((a/t)*100).toFixed(1)+'%':'—';return`<tr${it.isTot?' class="tot"':''}><td>${it.l}</td><td class="num">${peso(t)}</td><td class="num" style="font-weight:600">${peso(a)}</td><td class="num ${v>=0?'vp':'vn'}">${v>=0?'+':''}${peso(v)}</td><td class="num">${achP}</td><td class="num">${statusBadge(a,t,false)}</td></tr>`;}).join('')+'</tbody></table>');}}if(sub==='expenses'){const exp=tva.expenses;const allExpKeys=Object.keys(exp).filter(k=>k!=='total');const allExpLabels={salariesWages:'Salaries & Wages',postage:'Postage & Telecom',officeRental:'Office Rental Fee',carRentalKia:'Car Rental Fee — KIA',meals:'Meals & Refreshments',professional:'Professional & Consultant Fee',transportation:'Transportation',interestLoan:'Interest on Loan Payable',miscellaneous:'Miscellaneous Expense',taxesLicenses:'Taxes, Licenses & Permits',amortMarketing:'Amort. — Marketing',amortOfficeEquip:'Amort. — Office Equip.',amortMotorcycle:'Amort. — Motorcycle',amortTrainings:'Amort. — Trainings',materials:'Materials',officeSuppliesDirect:'Office Supplies (Direct)',officeFurniture:'Office Furniture & Fixtures',otherDirect:'Other Direct Costs',commissionsDir:'Commissions – Direct',officeSupplies:'Office Supplies',pantrySupplies:'Pantry Supplies',carRental:'Car Rental Fee',electricWater:'Electric, Water & Insurance',staffHouse:'Staff House',thanksgivingMass:'Thanksgiving Mass',waterRefill:'Water Refill',professionalFee:'Professional Fee',amortization:'Amortization'};const items=allExpKeys.map(k=>({l:allExpLabels[k]||k,d:exp[k]})).filter(it=>it.d&&(it.d.annualTarget!==0||it.d.annualActual!==0||(it.d.ytd&&it.d.ytd.actual!==0)));const totItem={l:'TOTAL EXPENSES',d:exp.total,isTot:true};if(isYTD){return wrap('<table class="data-table">'+H(['DESCRIPTION','MONTHLY TARGET',...MONTHS,'YTD ACTUAL','YTD VARIANCE','%','✓'])+'<tbody>'+[...items,totItem].map(it=>{if(!it.d)return'';const{a,t,v}=rowVals(it.d);const achP=t!==0?((a/t)*100).toFixed(1)+'%':'—';const mCells=MONTHS.map(mo=>`<td class="num">${peso(it.d.monthly[mo]?it.d.monthly[mo].actual:0)}</td>`).join('');return`<tr${it.isTot?' class="tot"':''}><td>${it.l}</td><td class="num">${peso(it.d.monthlyTarget)}</td>${mCells}<td class="num" style="font-weight:600">${peso(a)}</td><td class="num ${v>0?'vn':'vp'}">${v>=0?'+':''}${peso(v)}</td><td class="num">${achP}</td><td class="num">${statusBadge(a,t,true)}</td></tr>`;}).join('')+'</tbody></table>');}else{return wrap('<table class="data-table">'+H(['DESCRIPTION','TARGET',colHeader,varHeader,'%','✓'])+'<tbody>'+[...items,totItem].map(it=>{if(!it.d)return'';const{a,t,v}=rowVals(it.d);const achP=t!==0?((a/t)*100).toFixed(1)+'%':'—';return`<tr${it.isTot?' class="tot"':''}><td>${it.l}</td><td class="num">${peso(t)}</td><td class="num" style="font-weight:600">${peso(a)}</td><td class="num ${v>0?'vn':'vp'}">${v>=0?'+':''}${peso(v)}</td><td class="num">${achP}</td><td class="num">${statusBadge(a,t,true)}</td></tr>`;}).join('')+'</tbody></table>');}}if(isYTD){const niMo=(tva.netIncome&&tva.netIncome.monthly)||{};const rows2=MONTHS.map(mo=>{const d=niMo[mo];if(!d)return'';const va=d.actual-d.target;const achP=d.target!==0?((d.actual/d.target)*100).toFixed(1)+'%':'—';return`<tr><td style="font-weight:600">${mo}</td><td class="num">${peso(d.target)}</td><td class="num">${peso(d.actual)}</td><td class="num ${va>=0?'vp':'vn'}">${va>=0?'+':''}${peso(va)}</td><td class="num">${achP}</td><td>${d.actual===0&&d.target===0?'<span style="color:#94a3b8">—</span>':d.actual>=d.target?'<span class="spill profit">✅ Met</span>':'<span class="spill loss">❌ Missed</span>'}</td></tr>`;}).join('');const niTotA=MONTHS.reduce((s,mo)=>s+(niMo[mo]?niMo[mo].actual:0),0);const niTotT=tva.kpi.netIncome.ytdTarget,niTotV=niTotA-niTotT;return wrap('<table class="data-table">'+H(['MONTH','NI TARGET','NI ACTUAL','VARIANCE','ACHIEVEMENT','STATUS'])+`<tbody>${rows2}<tr class="tot"><td>YTD TOTAL</td><td class="num">${peso(niTotT)}</td><td class="num">${peso(niTotA)}</td><td class="num ${niTotV>=0?'vp':'vn'}">${niTotV>=0?'+':''}${peso(niTotV)}</td><td class="num">${niTotT!==0?((niTotA/niTotT)*100).toFixed(1)+'%':'—'}</td><td>—</td></tr></tbody></table>`);}else{const revR=(tva.revenue&&tva.revenue.total&&tva.revenue.total.monthly&&tva.revenue.total.monthly[m])||{};const expR=(tva.expenses&&tva.expenses.total&&tva.expenses.total.monthly&&tva.expenses.total.monthly[m])||{};const niR=(tva.netIncome&&tva.netIncome.monthly&&tva.netIncome.monthly[m])||{};const rA=revR.actual||0,rT=revR.target||0,rV=rA-rT;const eA=expR.actual||0,eT=expR.target||0,eV=eA-eT;const nA=niR.actual||0,nT=niR.target||0,nV=nA-nT;return wrap('<table class="data-table">'+H(['CATEGORY','TARGET',`${m} ACTUAL`,'VARIANCE','ACHIEVEMENT','STATUS'])+`<tbody><tr><td style="font-weight:600">Revenue</td><td class="num">${peso(rT)}</td><td class="num">${peso(rA)}</td><td class="num ${rV>=0?'vp':'vn'}">${rV>=0?'+':''}${peso(rV)}</td><td class="num">${rT!==0?((rA/rT)*100).toFixed(1)+'%':'—'}</td><td>${statusBadge(rA,rT,false)}</td></tr><tr><td style="font-weight:600">Expenses</td><td class="num">${peso(eT)}</td><td class="num">${peso(eA)}</td><td class="num ${eV>0?'vn':'vp'}">${eV>=0?'+':''}${peso(eV)}</td><td class="num">${eT!==0?((eA/eT)*100).toFixed(1)+'%':'—'}</td><td>${statusBadge(eA,eT,true)}</td></tr><tr class="tot"><td>Net Income</td><td class="num">${peso(nT)}</td><td class="num">${peso(nA)}</td><td class="num ${nV>=0?'vp':'vn'}">${nV>=0?'+':''}${peso(nV)}</td><td class="num">${nT!==0?((nA/nT)*100).toFixed(1)+'%':'—'}</td><td>${statusBadge(nA,nT,false)}</td></tr></tbody></table>`);}}
 
-function initTvaSubChart(sub){
-  const ctx=el('tvaSubCanvas');if(!ctx||!S.tva)return;
-  if(S.charts.tvaSub){S.charts.tvaSub.destroy();delete S.charts.tvaSub;}
-  const wrap=ctx.parentElement;if(wrap){const h=wrap.offsetHeight>0?wrap.offsetHeight:380;ctx.style.width='100%';ctx.style.height=h+'px';}
-  const tva=S.tva,m=S.month,isYTD=m==='all',opts=mkBarOpts();
-  opts.interaction={mode:'index',intersect:false};opts.responsive=true;opts.maintainAspectRatio=false;
-  const tgtDS={label:'Target',backgroundColor:'rgba(203,213,225,.55)',borderColor:'#94a3b8',borderWidth:1.5,borderRadius:4,barPercentage:.4,categoryPercentage:.9};
-  const actBase={borderWidth:2,borderRadius:4,barPercentage:.4,categoryPercentage:.9};
-  const getRowA=(row)=>{if(!row)return 0;if(isYTD)return row.ytd?(row.ytd.actual||0):0;return(row.monthly&&row.monthly[m])?(row.monthly[m].actual||0):0;};
-  const getRowT=(row)=>{if(!row)return 0;if(isYTD)return row.ytd?(row.ytd.target||0):0;return(row.monthly&&row.monthly[m])?(row.monthly[m].target||0):0;};
-  if(isYTD){const rev=(tva.revenue&&tva.revenue.total&&tva.revenue.total.monthly)||{};const exp=(tva.expenses&&tva.expenses.total&&tva.expenses.total.monthly)||{};const ni=(tva.netIncome&&tva.netIncome.monthly)||{};const activeMths=MONTHS.filter(mo=>(rev[mo]&&(rev[mo].actual!==0||rev[mo].target!==0))||(exp[mo]&&(exp[mo].actual!==0||exp[mo].target!==0))||(ni[mo]&&(ni[mo].actual!==0||ni[mo].target!==0)));const labels=activeMths.length>0?activeMths:MONTHS.slice(0,1);if(sub==='revenue'){S.charts.tvaSub=new Chart(ctx,{type:'bar',data:{labels,datasets:[{...tgtDS,label:'Revenue Target',data:labels.map(mo=>rev[mo]?rev[mo].target:0)},{...actBase,label:'Revenue Actual',data:labels.map(mo=>rev[mo]?rev[mo].actual:0),backgroundColor:'rgba(79,70,229,.3)',borderColor:C.indigo}]},options:opts});}else if(sub==='expenses'){S.charts.tvaSub=new Chart(ctx,{type:'bar',data:{labels,datasets:[{...tgtDS,label:'Expense Target',data:labels.map(mo=>exp[mo]?exp[mo].target:0)},{...actBase,label:'Expense Actual',data:labels.map(mo=>exp[mo]?exp[mo].actual:0),backgroundColor:'rgba(249,115,22,.3)',borderColor:C.orange2}]},options:opts});}else{const acts=labels.map(mo=>ni[mo]?ni[mo].actual:0);S.charts.tvaSub=new Chart(ctx,{type:'bar',data:{labels,datasets:[{...tgtDS,label:'NI Target',data:labels.map(mo=>ni[mo]?ni[mo].target:0)},{...actBase,label:'NI Actual',data:acts,backgroundColor:acts.map(v=>v>=0?'rgba(34,197,94,.3)':'rgba(239,68,68,.3)'),borderColor:acts.map(v=>v>=0?C.green2:C.red2)}]},options:opts});}}else{const rev=tva.revenue,exp=tva.expenses,ni=tva.netIncome;if(sub==='revenue'){const revSchema=getTvaRevSchema();const rows=[...revSchema.map(s=>({l:s.l,d:rev[s.key]||null})).filter(r=>r.d),{l:'TOTAL',d:rev.total}].filter(r=>r.d&&(getRowT(r.d)!==0||getRowA(r.d)!==0));S.charts.tvaSub=new Chart(ctx,{type:'bar',data:{labels:rows.map(r=>r.l),datasets:[{...tgtDS,label:`Target`,data:rows.map(r=>getRowT(r.d))},{...actBase,label:`${m} Actual`,data:rows.map(r=>getRowA(r.d)),backgroundColor:'rgba(79,70,229,.3)',borderColor:C.indigo}]},options:opts});}else if(sub==='expenses'){const eMap=[...getTvaExpSchema(),{l:'TOTAL',k:'total'}].map(r=>({l:r.l,d:exp[r.k]})).filter(r=>r.d&&(getRowT(r.d)!==0||getRowA(r.d)!==0));const acts=eMap.map(r=>getRowA(r.d));S.charts.tvaSub=new Chart(ctx,{type:'bar',data:{labels:eMap.map(r=>r.l),datasets:[{...tgtDS,label:`Target`,data:eMap.map(r=>getRowT(r.d))},{...actBase,label:`${m} Actual`,data:acts,backgroundColor:'rgba(249,115,22,.3)',borderColor:C.orange2}]},options:opts});}else{const revRow=(rev&&rev.total&&rev.total.monthly&&rev.total.monthly[m])||{};const expRow=(exp&&exp.total&&exp.total.monthly&&exp.total.monthly[m])||{};const niRow=(ni&&ni.monthly&&ni.monthly[m])||{};const labels=['Revenue','Expenses','Net Income'];const tgts=[revRow.target||0,expRow.target||0,niRow.target||0];const acts=[revRow.actual||0,expRow.actual||0,niRow.actual||0];S.charts.tvaSub=new Chart(ctx,{type:'bar',data:{labels,datasets:[{...tgtDS,label:`Target`,data:tgts},{...actBase,label:`${m} Actual`,data:acts,backgroundColor:acts.map((v,i)=>i===2?(v>=0?'rgba(34,197,94,.3)':'rgba(239,68,68,.3)'):'rgba(79,70,229,.3)'),borderColor:acts.map((v,i)=>i===2?(v>=0?C.green2:C.red2):C.indigo)}]},options:opts});}}}
-
 function buildStats(id){const v=getVals(),ob=getOpexBD()||{};const gm=v.sales>0?v.gp/v.sales:0,nm=v.sales>0?v.ni/v.sales:0;const map={sales:[{v:peso(v.sales,true),l:'Net Sales'},{v:peso(v.gp,true),l:'Gross Profit'},{v:pct(gm),l:'GM %'},{v:peso(v.ni,true),l:'Net Income'}],gp:[{v:peso(v.gp,true),l:'Gross Profit'},{v:peso(v.cogs,true),l:'Total COGS'},{v:pct(gm),l:'GM %'},{v:peso(v.sales,true),l:'Net Sales'}],opex:[{v:peso(v.opex,true),l:'Total OpEx'},{v:peso(ob.comp||0,true),l:'Compensation'},{v:peso(ob.ga||0,true),l:'G&A'},{v:peso(ob.comm||0,true),l:'Commissions'}],ni:[{v:peso(v.ni,true),l:'Net Income'},{v:peso(v.sales,true),l:'Revenue'},{v:peso(v.gp,true),l:'Gross Profit'},{v:pct(nm),l:'Net Margin'}],bonus:(()=>{const sd=S.sum,d2=S.data,mt=50000,at=mt*12;const tp=MONTHS.reduce((s,m,i)=>s+(sd?(sd.opex.totalCommissions[m]||0):(d2.monthlyTrend.opex[i]*0.05)),0);const metC=MONTHS.filter((m,i)=>(sd?(sd.opex.totalCommissions[m]||0):(d2.monthlyTrend.opex[i]*0.05))>=mt).length;return[{v:peso(tp,true),l:'Total Progress'},{v:peso(at,true),l:'Annual Target'},{v:metC+'/12',l:'Months Met'},{v:((tp/at)*100).toFixed(1)+'%',l:'Achievement'}];})(),ga:(()=>{const ob2=getOpexBD()||{};const gaTotal=ob2.ga||0;return[{v:peso(gaTotal,true),l:'Total G&A'},{v:peso(ob2.comp||0,true),l:'vs Compensation'},{v:peso(ob2.comm||0,true),l:'vs Commissions'},{v:((gaTotal/((ob2.comp||0)+(ob2.ga||0)+(ob2.comm||0)||1))*100).toFixed(1)+'%',l:'% of OpEx'}];})()};return(map[id]||[]).map(s=>`<div class="dstat"><div class="dstat-val">${s.v}</div><div class="dstat-lbl">${s.l}</div></div>`).join('');}
 function buildOpexDrill(){const ob=getOpexBD()||{};const total=(ob.comp||0)+(ob.ga||0)+(ob.comm||0)||1;const subCards=[{id:'comp',cls:'sc-comp',icon:'bi-people-fill',label:'Compensation',val:ob.comp||0},{id:'ga',cls:'sc-ga',icon:'bi-building',label:'G&A Expenses',val:ob.ga||0},{id:'comm',cls:'sc-comm',icon:'bi-briefcase-fill',label:'Commissions',val:ob.comm||0}];const subCardHtml=`<div class="row g-2 mb-3">${subCards.map(sc=>`<div class="col-12 col-sm-4"><div class="opex-sub-card ${sc.cls}${S.opexSub===sc.id?' active':''}" onclick="setOpexSub('${sc.id}')"><div class="sc-label"><i class="bi ${sc.icon} me-1"></i>${sc.label}</div><div class="sc-value">${peso(sc.val,true)}</div><div class="sc-pct">${((sc.val/total)*100).toFixed(1)}% of OpEx</div><div class="sc-bar-track"><div class="sc-bar-fill" style="width:${((sc.val/total)*100).toFixed(1)}%"></div></div></div></div>`).join('')}</div>`;const statsHtml=`<div class="drill-stats" style="margin-bottom:16px;"><div class="dstat"><div class="dstat-val">${peso(total,true)}</div><div class="dstat-lbl">Total OpEx</div></div><div class="dstat"><div class="dstat-val">${((ob.comp||0)/total*100).toFixed(1)}%</div><div class="dstat-lbl">Comp %</div></div><div class="dstat"><div class="dstat-val">${((ob.ga||0)/total*100).toFixed(1)}%</div><div class="dstat-lbl">G&A %</div></div><div class="dstat"><div class="dstat-val">${((ob.comm||0)/total*100).toFixed(1)}%</div><div class="dstat-lbl">Comm %</div></div></div>`;const contentTabs=`<div class="drill-tabs" style="margin-bottom:16px;"><button class="dtab${S.opexSubTab!=='table'?' active':''}" onclick="setOpexSubTab('chart')"><i class="bi bi-bar-chart me-1"></i>Chart</button><button class="dtab${S.opexSubTab==='table'?' active':''}" onclick="setOpexSubTab('table')"><i class="bi bi-table me-1"></i>Table</button></div>`;return statsHtml+subCardHtml+contentTabs+`<div id="opexContent" class="opex-content-area">${buildOpexSubContent()}</div>`;}
 function setOpexSub(sub){S.opexSub=sub;if(S.activeDrill==='opex')openDrill('opex');}
 function setOpexSubTab(tab){S.opexSubTab=tab;if(S.activeDrill==='opex')openDrill('opex');}
 function buildOpexSubContent(){if(!S.opexSubTab)S.opexSubTab='chart';if(S.opexSubTab==='table')return buildOpexSubTable();return`<div class="drill-viz-row"><div class="tva-chart-wrap"><canvas id="opexSubCanvas"></canvas></div>${buildOpexSubBars()}</div>`;}
 function buildOpexSubBars(){const sub=S.opexSub,sd=S.sum;const m=S.month,isAll=m==='all';const g=o=>sd?(isAll?(o.YTD||0):(o[m]||0)):0;let items=[],title='';if(sub==='comp'){title=isAll?'Compensation — YTD':`Compensation — ${m}`;items=[{l:'Salaries & Wages',v:sd?g(sd.compensation.salariesWages):0,c:C.comp[0]},{l:'Allowances',v:sd?g(sd.compensation.allowances):0,c:C.comp[1]},{l:'OT / Holidays',v:sd?g(sd.compensation.overtime):0,c:C.comp[2]},{l:'13th Month',v:sd?g(sd.compensation.bonus13th):0,c:C.comp[3]},{l:'Statutory Ben.',v:sd?g(sd.compensation.statutoryBen):0,c:C.comp[4]},{l:'Service Inc.',v:sd?g(sd.compensation.sil):0,c:C.comp[5]}].filter(i=>i.v>0).sort((a,b)=>b.v-a.v);}else if(sub==='ga'){title=isAll?'Top G&A Items — YTD':`Top G&A Items — ${m}`;const ga=getGADetail()||{};items=Object.entries(ga).map(([k,v])=>({l:gaLabel(k),v,c:gaColor(k)})).filter(i=>i.v>0).sort((a,b)=>b.v-a.v).slice(0,8);}else{title=isAll?'Commissions — YTD':`Commissions — ${m}`;items=[{l:'Staff Commission',v:sd?g(sd.opex.staffCommission):0,c:C.blue2},{l:'Sales Commission',v:sd?g(sd.opex.salesCommission):0,c:C.orange2}].filter(i=>i.v>0).sort((a,b)=>b.v-a.v);}if(!items.length)return`<div class="drill-viz-bars"><p style="font-size:11px;color:#94a3b8;padding-top:20px;">No data for this period.</p></div>`;const max=Math.max(...items.map(i=>i.v),1),tot=items.reduce((s,i)=>s+i.v,0)||1;const bars=items.map(it=>`<div class="mb"><div class="mb-top"><span class="mb-name"><span class="mb-dot" style="background:${it.c}"></span>${it.l}</span><span class="mb-val">${peso(it.v,true)} <span style="color:#94a3b8;font-size:10px">${(it.v/tot*100).toFixed(0)}%</span></span></div><div class="mb-track"><div class="mb-fill" style="width:${(it.v/max*100).toFixed(1)}%;background:${it.c}"></div></div></div>`).join('');return`<div class="drill-viz-bars"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#94a3b8;margin-bottom:10px;">${title}</div>${bars}</div>`;}
-function buildOpexSubTable(){const sd=S.sum,sub=S.opexSub;const wrap=html=>`<div class="tbl-scroll">${html}</div>`;const H=cols=>'<thead><tr>'+cols.map((c,i)=>`<th${i?' class="num"':''}>${c}</th>`).join('')+'</tr></thead>';if(sub==='comp'&&sd){const items=[{l:'Salaries & Wages',d:sd.compensation.salariesWages},{l:'Allowances',d:sd.compensation.allowances},{l:'OT / Holidays',d:sd.compensation.overtime},{l:'13th Month / Bonus',d:sd.compensation.bonus13th},{l:'Statutory Benefits',d:sd.compensation.statutoryBen},{l:'Service Incentive',d:sd.compensation.sil}];return wrap('<table class="data-table">'+H(['COMP ITEM',...MONTHS,'YTD'])+'<tbody>'+items.map(it=>`<tr><td>${it.l}</td>${MONTHS.map(m=>` <td class="num">${peso(it.d[m]||0)}</td>`).join('')}<td class="num">${peso(it.d.YTD||0)}</td></tr>`).join('')+`<tr class="tot"><td>Total Compensation</td>${MONTHS.map(m=>`<td class="num">${peso(sd.compensation.total[m]||0)}</td>`).join('')}<td class="num">${peso(sd.compensation.total.YTD||0)}</td></tr></tbody></table>`);}if(sub==='ga')return buildGATable();if(sub==='comm'&&sd){const items=[{l:'Staff Commission',d:sd.opex.staffCommission},{l:'Sales Commission',d:sd.opex.salesCommission}];return wrap('<table class="data-table">'+H(['COMMISSION',...MONTHS,'YTD'])+'<tbody>'+items.map(it=>`<tr><td>${it.l}</td>${MONTHS.map(m=>`<td class="num">${peso(it.d[m]||0)}</td>`).join('')}<td class="num">${peso(it.d.YTD||0)}</td></tr>`).join('')+`<tr class="tot"><td>Total Commissions</td>${MONTHS.map(m=>`<td class="num">${peso(sd.opex.totalCommissions[m]||0)}</td>`).join('')}<td class="num">${peso(sd.opex.totalCommissions.YTD||0)}</td></tr></tbody></table>`);}return'<p class="p-3 text-muted small">No data.</p>';}
+function buildOpexSubTable(){const sd=S.sum,sub=S.opexSub;const wrap=html=>`<div class="tbl-scroll">${html}</div>`;const H=cols=>'<thead><tr>'+cols.map((c,i)=>`<th${i?' class="num"':''}>${c}</th>`).join('')+'</tr></thead>';if(sub==='comp'&&sd){const items=[{l:'Salaries & Wages',d:sd.compensation.salariesWages},{l:'Allowances',d:sd.compensation.allowances},{l:'OT / Holidays',d:sd.compensation.overtime},{l:'13th Month / Bonus',d:sd.compensation.bonus13th},{l:'Statutory Benefits',d:sd.compensation.statutoryBen},{l:'Service Incentive',d:sd.compensation.sil}];return wrap('<table class="data-table">'+H(['COMP ITEM',...MONTHS,'YTD'])+'<tbody>'+items.map(it=>`<tr><td>${it.l}</td>${MONTHS.map(m=>`<td class="num">${peso(it.d[m]||0)}</td>`).join('')}<td class="num">${peso(it.d.YTD||0)}</td></tr>`).join('')+`<tr class="tot"><td>Total Compensation</td>${MONTHS.map(m=>`<td class="num">${peso(sd.compensation.total[m]||0)}</td>`).join('')}<td class="num">${peso(sd.compensation.total.YTD||0)}</td></tr></tbody></table>`);}if(sub==='ga')return buildGATable();if(sub==='comm'&&sd){const items=[{l:'Staff Commission',d:sd.opex.staffCommission},{l:'Sales Commission',d:sd.opex.salesCommission}];return wrap('<table class="data-table">'+H(['COMMISSION',...MONTHS,'YTD'])+'<tbody>'+items.map(it=>`<tr><td>${it.l}</td>${MONTHS.map(m=>`<td class="num">${peso(it.d[m]||0)}</td>`).join('')}<td class="num">${peso(it.d.YTD||0)}</td></tr>`).join('')+`<tr class="tot"><td>Total Commissions</td>${MONTHS.map(m=>`<td class="num">${peso(sd.opex.totalCommissions[m]||0)}</td>`).join('')}<td class="num">${peso(sd.opex.totalCommissions.YTD||0)}</td></tr></tbody></table>`);}return'<p class="p-3 text-muted small">No data.</p>';}
 function buildViz(id){const chartHtml=`<div class="drill-chart"><canvas id="drillCanvas"></canvas></div>`;if(id==='sales')return`<div style="width:100%">${chartHtml}</div>`;if(id==='gp'){const b=getCogsBD()||{};const items=[{l:'Materials',v:b.mat,c:C.blue2},{l:'Office Supplies',v:b.supp,c:C.green2},{l:'Merchandise Sold',v:b.merch,c:C.orange2},{l:'Furniture',v:b.furn,c:C.teal2},{l:'Commissions',v:b.comm,c:C.red2},{l:'Other Direct',v:b.other,c:'#8b5cf6'}].sort((a,b)=>b.v-a.v);const max=Math.max(...items.map(i=>i.v),1),tot=items.reduce((s,i)=>s+i.v,0)||1;const bars=items.map(it=>`<div class="mb"><div class="mb-top"><span class="mb-name"><span class="mb-dot" style="background:${it.c}"></span>${it.l}</span><span class="mb-val">${peso(it.v,true)} <span style="color:#94a3b8;font-size:10px">${(it.v/tot*100).toFixed(0)}%</span></span></div><div class="mb-track"><div class="mb-fill" style="width:${(it.v/max*100).toFixed(1)}%;background:${it.c}"></div></div></div>`).join('');return`<div class="drill-viz-row">${chartHtml}<div class="drill-viz-bars"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#94a3b8;margin-bottom:10px;">Ranked by Cost</div>${bars}</div></div>`;}if(id==='ga'){const ga=getGADetail();if(!ga)return`<div style="width:100%">${chartHtml}</div>`;const items=Object.entries(ga).map(([k,v])=>({l:gaLabel(k),v,c:gaColor(k)})).filter(i=>i.v>0).sort((a,b)=>b.v-a.v).slice(0,10);const max=Math.max(...items.map(i=>i.v),1),tot=items.reduce((s,i)=>s+i.v,0)||1;const title=S.month==='all'?'Top G&A Items — YTD':`Top G&A Items — ${S.month}`;const bars=items.map(it=>`<div class="mb"><div class="mb-top"><span class="mb-name"><span class="mb-dot" style="background:${it.c}"></span>${it.l}</span><span class="mb-val">${peso(it.v,true)} <span style="color:#94a3b8;font-size:10px">${(it.v/tot*100).toFixed(0)}%</span></span></div><div class="mb-track"><div class="mb-fill" style="width:${(it.v/max*100).toFixed(1)}%;background:${it.c}"></div></div></div>`).join('');return`<div class="drill-viz-row">${chartHtml}<div class="drill-viz-bars"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#94a3b8;margin-bottom:10px;">${title}</div>${bars}</div></div>`;}return`<div style="width:100%">${chartHtml}</div>`;}
 function buildDrillTable(id){const d=S.data.monthlyTrend;const H=cols=>'<thead><tr>'+cols.map((c,i)=>`<th${i?' class="num"':''}>${c}</th>`).join('')+'</tr></thead>';const wrap=html=>`<div class="tbl-scroll">${html}</div>`;if(id==='sales')return buildISFullTable();if(id==='gp'&&S.sum){const sd=S.sum;const items=[{l:'Materials',d:sd.cogs.materials},{l:'Office Supplies',d:sd.cogs.officeSuppliesDirect},{l:'Merchandise Sold',d:sd.cogs.merchandiseSold},{l:'Office Furniture',d:sd.cogs.officeFurniture},{l:'Commissions (Dir)',d:sd.cogs.commissionsDir},{l:'Other Direct',d:sd.cogs.otherDirect}];return wrap('<table class="data-table">'+H(['COGS ITEM',...MONTHS,'YTD'])+'<tbody>'+items.map(it=>`<tr><td>${it.l}</td>${MONTHS.map(m=>`<td class="num amt-neg">${peso(it.d[m]||0)}</td>`).join('')}<td class="num amt-neg">${peso(it.d.YTD||0)}</td></tr>`).join('')+`<tr class="tot"><td>Total COGS</td>${MONTHS.map(m=>`<td class="num">${peso(sd.cogs.total[m]||0)}</td>`).join('')}<td class="num">${peso(sd.cogs.total.YTD||0)}</td></tr></tbody></table>`);}if(id==='bonus')return buildBonusTable();if(id==='ga')return buildGATable();return wrap('<table class="data-table">'+H(['MONTH','Net Sales','COGS','OpEx','Net Income'])+'<tbody>'+MONTHS.map((m,i)=>`<tr><td>${m}</td><td class="num">${peso(d.sales[i])}</td><td class="num amt-neg">${peso(d.cogs[i])}</td><td class="num amt-neg">${peso(d.opex[i])}</td><td class="num ${d.netIncome[i]>=0?'vp':'vn'}">${peso(d.netIncome[i])}</td></tr>`).join('')+`<tr class="tot"><td>YTD</td><td class="num">${peso(sumArr(d.sales))}</td><td class="num">${peso(sumArr(d.cogs))}</td><td class="num">${peso(sumArr(d.opex))}</td><td class="num">${peso(sumArr(d.netIncome))}</td></tr></tbody></table>`);}
 function buildISFullTable(){const d=S.data.monthlyTrend;const H=cols=>'<thead><tr>'+cols.map((c,i)=>`<th${i?' class="num"':''}>${c}</th>`).join('')+'</tr></thead>';const sec=lbl=>`<tr style="background:var(--co-bg)"><td colspan="${MONTHS.length+2}" style="font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--co-primary);padding:7px 14px;">${lbl}</td></tr>`;const row=(lbl,arr,cls='',neg=false)=>{const cells=arr.map(v=>`<td class="num${neg&&v>0?' amt-neg':''}">${peso(v)}</td>`).join('');const ytdV=sumArr(arr);return`<tr${cls?` class="${cls}"`:''}><td>${lbl}</td>${cells}<td class="num${neg&&ytdV>0?' amt-neg':''}">${peso(ytdV)}</td></tr>`;};return`<div class="tbl-scroll"><table class="data-table">${H(['DESCRIPTION',...MONTHS,'YTD'])}<tbody>`+sec('── Revenues')+row('Net Sales',d.sales)+sec('── Direct Costs (COGS)')+row('Total COGS',d.cogs,'',true)+row('Gross Profit',d.grossProfit,'tot')+sec('── Operating Expenses')+row('Total OpEx',d.opex,'',true)+row('Net Income (Before Tax)',d.netIncome,'tot')+'</tbody></table></div>';}
