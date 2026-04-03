@@ -75,6 +75,7 @@ body{font-family:var(--bs-body-font-family);background:var(--bs-body-bg);}
 .kpi-change{display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:700;padding:2px 7px;border-radius:999px;margin-top:10px;}
 .ch-up{background:var(--green-bg);color:var(--green);} .ch-down{background:var(--red-bg);color:var(--red);}
 .ch-flat{background:var(--blue-bg);color:var(--blue);} .ch-ora{background:var(--orange-bg);color:var(--orange);}
+.ch-purple{background:#f5f3ff;color:#7c3aed;}
 .kpi-arrow{position:absolute;bottom:16px;right:16px;width:24px;height:24px;border-radius:50%;background:var(--gray100);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--gray500);transition:all .2s;}
 .kpi:hover .kpi-arrow,.kpi.active .kpi-arrow{background:var(--blue);color:#fff;}
 .kpi.active.kpi-green .kpi-arrow{background:var(--green);}
@@ -140,6 +141,8 @@ body{font-family:var(--bs-body-font-family);background:var(--bs-body-bg);}
 .dstat-lbl{font-size:10px;color:var(--gray500);margin-top:3px;text-transform:uppercase;letter-spacing:.07em;font-weight:600;}
 .dstat.highlight{background:#eef2ff;border-color:#c7d2fe;}
 .dstat.highlight .dstat-val{color:#4f46e5;}
+.dstat.highlight-purple{background:#f5f3ff;border-color:#ddd6fe;}
+.dstat.highlight-purple .dstat-val{color:#7c3aed;}
 .drill-tabs{display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap;}
 .dtab{padding:6px 14px;border-radius:999px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid var(--gray200);background:#fff;color:var(--gray500);transition:all .15s;font-family:var(--bs-body-font-family);}
 .dtab:hover{border-color:var(--gray300);color:var(--gray700);}
@@ -149,6 +152,7 @@ body{font-family:var(--bs-body-font-family);background:var(--bs-body-bg);}
 .dp-teal .dtab.active{background:var(--teal);border-color:var(--teal);}
 .dp-red .dtab.active{background:var(--red);border-color:var(--red);}
 .dp-indigo .dtab.active{background:#4f46e5;border-color:#4f46e5;}
+.dp-purple .dtab.active{background:#7c3aed;border-color:#7c3aed;}
 .drill-chart{position:relative;height:320px;}
 .drill-viz-row{display:grid;grid-template-columns:2fr 1fr;gap:20px;margin-bottom:20px;align-items:start;}
 @media(max-width:700px){.drill-viz-row{grid-template-columns:1fr;}}
@@ -237,6 +241,9 @@ body{font-family:var(--bs-body-font-family);background:var(--bs-body-bg);}
 .atc-hc .atc-bar-fill{background:#4f46e5;}
 .atc-gp .atc-bar-fill{background:var(--green2);}
 .atc-ni .atc-bar-fill{background:var(--teal2);}
+/* ── Bonus hero banner ── */
+.bonus-hero{border-radius:10px;padding:22px 26px;color:#fff;margin-bottom:18px;overflow:hidden;}
+.bonus-hero-alm{background:linear-gradient(135deg,#1e1b4b,#4c1d95,#5b21b6);}
 @media(max-width:767px){
   .navbar{height:auto!important;padding:8px 12px!important;flex-wrap:wrap;}
   .navbar .container-fluid{flex-wrap:wrap;gap:8px;}
@@ -298,6 +305,7 @@ body{font-family:var(--bs-body-font-family);background:var(--bs-body-bg);}
 <div class="container-xl py-4 px-3 px-md-4">
   <div class="status-alert loading" id="statusEl"><span class="spin"></span>&nbsp; Connecting to Google Sheets…</div>
 
+  <!-- NAM Trading / Builders view -->
   <div id="view-is">
     <div class="period-head" id="periodHead" style="display:none;">
       <div>
@@ -339,6 +347,7 @@ body{font-family:var(--bs-body-font-family);background:var(--bs-body-bg);}
     </div>
   </div>
 
+  <!-- ALM view -->
   <div id="view-alm" style="display:none;">
     <div class="period-head" id="almPeriodHead" style="display:none;">
       <div>
@@ -374,6 +383,9 @@ body{font-family:var(--bs-body-font-family);background:var(--bs-body-bg);}
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+// ═══════════════════════════════════════════════════════════════
+//  API ENDPOINTS
+// ═══════════════════════════════════════════════════════════════
 const APIS = {
   trading:  'https://script.google.com/macros/s/AKfycbwmel6PRxAGyVp2t0p0I0QaAtC-U_xRc3C5GbJixgPBpSlR3P1Abd1XNzx-q6MyX2w/exec',
   builders: 'https://script.google.com/macros/s/AKfycbyt_ffHnLaheVTokjX72M2zC0uEP3mmWqQ_9m2_AJbiKd7Ee-LMkyo1FwaehdyFMYFm/exec',
@@ -384,7 +396,9 @@ const APIS_TVA = {
   builders: 'https://script.google.com/macros/s/AKfycbz1hMWJYgj_C6eNxCMwmDWv-eaP7PV2MSEdUHxm2XSrORWPNP03wGLW4fq4rvB1Mf7l/exec',
   alm:      'https://script.google.com/macros/s/AKfycbykeK12AYlns_LFSYzi-H6_s5leM21_nFOdENaCHCWKCv-8JH30aceAeyNJlRuBqdU/exec'
 };
-const ALM_TVA_API = 'https://script.google.com/macros/s/AKfycbykeK12AYlns_LFSYzi-H6_s5leM21_nFOdENaCHCWKCv-8JH30aceAeyNJlRuBqdU/exec';
+
+// ALM Bonus monthly target
+const ALM_BONUS_MONTHLY_TARGET = 50000;
 
 const CO_THEMES = {
   trading:  { primary:'#1d4ed8', primary2:'#3b82f6', bg:'#eff6ff', bd:'#bfdbfe', logoBg:'#1d4ed8', logoText:'T', name:'NAM Wholesale Trading',      short:'NAM Trading' },
@@ -402,7 +416,9 @@ let S = {
   drillTab:{}, opexSub:'comp', opexSubTab:'chart',
   tvaSub:'revenue', tvaSubTab:'chart',
   almDrillTab:{}, almTvaSub:'revenue', almTvaSubTab:'chart',
-  almGaSub:'comp', almGaSubTab:'chart'
+  almGaSub:'comp', almGaSubTab:'chart',
+  // ALM bonus tab state
+  almBonusTab: 'chart'
 };
 
 const C = {
@@ -412,22 +428,26 @@ const C = {
   teal:'#0e7490', teal2:'#22d3ee', tealA:'rgba(34,211,238,.1)',
   red:'#b91c1c', red2:'#ef4444', redA:'rgba(239,68,68,.1)',
   indigo:'#4f46e5', indigo2:'#818cf8',
+  purple:'#7c3aed', purple2:'#a78bfa',
   muted:'#64748b', text:'#0f172a', border:'#e2e8f0',
   comp:['#1d4ed8','#2563eb','#3b82f6','#60a5fa','#93c5fd','#bfdbfe']
 };
 
-const el   = id => document.getElementById(id);
-const peso = (n, compact) => {
+const el    = id => document.getElementById(id);
+const peso  = (n, compact) => {
   if (n == null || isNaN(n)) return '—';
   const a = Math.abs(n);
   if (compact && a >= 1e6) return (n < 0 ? '-' : '') + '₱' + (a/1e6).toFixed(2) + 'M';
   if (compact && a >= 1e3) return (n < 0 ? '-' : '') + '₱' + (a/1e3).toFixed(1) + 'K';
   return '₱' + n.toLocaleString('en-PH',{minimumFractionDigits:2,maximumFractionDigits:2});
 };
-const pct  = n => (!n && n !== 0) ? '—' : (n*100).toFixed(1)+'%';
+const pct   = n => (!n && n !== 0) ? '—' : (n*100).toFixed(1)+'%';
 const sumArr = a => a.reduce((s,v) => s+v, 0);
-const plbl = () => S.month === 'all' ? 'YTD' : (MN[S.month] || S.month);
+const plbl  = () => S.month === 'all' ? 'YTD' : (MN[S.month] || S.month);
 
+// ═══════════════════════════════════════════════════════════════
+//  THEME
+// ═══════════════════════════════════════════════════════════════
 function applyTheme(co) {
   const t = CO_THEMES[co], r = document.documentElement.style;
   r.setProperty('--co-primary', t.primary);
@@ -487,14 +507,13 @@ async function fetchData() {
 }
 
 async function fetchAlm(apiUrl, cb, controller) {
+  const tvaUrl = APIS_TVA['alm'];
   const promises = [
-    fetch(apiUrl + '?action=getSummary&year=' + S.year + '&cb=' + cb, {signal: controller.signal, redirect: 'follow'})
+    fetch(apiUrl + '?action=getSummary&year=' + S.year + '&cb=' + cb, {signal: controller.signal, redirect: 'follow'}),
+    tvaUrl
+      ? fetch(tvaUrl + '?action=getTargetVsActual&year=' + S.year + '&cb=' + cb, {signal: controller.signal, redirect: 'follow'})
+      : Promise.resolve(null)
   ];
-  if (ALM_TVA_API) {
-    promises.push(fetch(ALM_TVA_API + '?action=getTargetVsActual&year=' + S.year + '&cb=' + cb, {signal: controller.signal, redirect: 'follow'}));
-  } else {
-    promises.push(Promise.resolve(null));
-  }
   const [res, tvaRes] = await Promise.all(promises);
   if (!res.ok) throw new Error('HTTP ' + res.status);
   const json = await res.json();
@@ -559,6 +578,34 @@ function setStatus(t, m) {
 }
 
 // ═══════════════════════════════════════════════════════════════
+//  ALM BONUS HELPERS
+// ═══════════════════════════════════════════════════════════════
+function getAlmBonusData() {
+  if (!S.almData) return null;
+  const d = S.almData;
+  const mt = ALM_BONUS_MONTHLY_TARGET;
+  const at = mt * 12;
+
+  // Try multiple possible field names for bonus/commission data
+  const bonusObj = d.bonusTotal || d.staffCommission || d.totalCommissions || d.commissions || {};
+
+  const rows = MONTHS.map(mo => {
+    const prog = bonusObj[mo] || 0;
+    const ni   = (d.netIncome && d.netIncome[mo]) ? d.netIncome[mo] : 0;
+    const va   = prog - mt;
+    const pa   = mt > 0 ? prog / mt : 0;
+    return { m: mo, prog, ni, va, pa, met: pa >= 1 };
+  });
+
+  const tp   = rows.reduce((s, r) => s + r.prog, 0);
+  const tni  = rows.reduce((s, r) => s + r.ni,   0);
+  const ap   = at > 0 ? tp / at : 0;
+  const metC = rows.filter(r => r.met).length;
+
+  return { rows, tp, tni, ap, at, mt, metC };
+}
+
+// ═══════════════════════════════════════════════════════════════
 //  ALM RENDER
 // ═══════════════════════════════════════════════════════════════
 function getAlmVals() {
@@ -591,41 +638,71 @@ function renderAlm() {
   if (S.almActiveDrill) openAlmDrill(S.almActiveDrill);
 }
 
+// ─────────────────────────────────────────────────────────────
+//  ALM KPI CARDS
+//  Order: Revenue · HC · GP · G&A · Net Income · Bonus · TVA
+// ─────────────────────────────────────────────────────────────
 function renderAlmKPIs() {
   const v = getAlmVals();
   if (!v) { el('almKpiGrid').innerHTML = ''; return; }
   const ni = v.ni, gpMargin = v.revenue>0?v.gp/v.revenue:0, niMargin = v.revenue>0?ni/v.revenue:0;
+
+  // ── Bonus card data ──────────────────────────────────────────
+  const bd = getAlmBonusData();
+  const bonusPct    = bd ? bd.ap * 100 : 0;
+  const bonusMeta   = bd ? bd.metC + '/12 months met · Target: ' + peso(bd.at, true) : 'Target: ₱600K/yr';
+  const bonusChange = bd && bd.tp >= bd.at
+    ? '✅ Annual Target Met!'
+    : (bd ? peso(bd.at - bd.tp, true) + ' remaining' : '—');
+  const bonusChCls  = bd && bd.tp >= bd.at ? 'ch-up' : 'ch-purple';
+
   const cards = [
+    // 1. Service Revenue
     {id:'alm-revenue', cls:'kpi-orange', icon:'bi-cash-coin',
      label:'Service Revenue', value:peso(v.revenue,true),
      meta:'HC: '+v.hc+' · WD: '+v.wd.toFixed(1),
      change:plbl()+' Revenue', chCls:'ch-flat', bar:100},
+    // 2. Headcount
     {id:'alm-hc', cls:'kpi-indigo', icon:'bi-people-fill',
      label:'Total Headcount', value:v.hc.toLocaleString(),
      meta:'Avg Working Days: '+v.wd.toFixed(2)+'/mo',
      change:'Active Deployed', chCls:'ch-flat', bar:Math.min(v.hc/700*100,100)},
+    // 3. Gross Profit
     {id:'alm-gp', cls:'kpi-green', icon:'bi-graph-up-arrow',
      label:'Gross Profit', value:peso(v.gp,true),
      meta:'Margin: '+pct(gpMargin),
-     change:(gpMargin>=0?'▲ ':'▼ ')+pct(gpMargin)+' GP Margin', chCls:gpMargin>=0?'ch-up':'ch-down',
+     change:(gpMargin>=0?'▲ ':'▼ ')+pct(gpMargin)+' GP Margin',
+     chCls:gpMargin>=0?'ch-up':'ch-down',
      bar:Math.min(Math.max(gpMargin*200,0),100)},
+    // 4. G&A Expenses
     {id:'alm-ga', cls:'kpi-orange', icon:'bi-receipt',
      label:'G&A Expenses', value:peso(v.ga,true),
      meta:'Interest: '+peso(v.interest,true)+' · Comp: '+peso(v.comp,true),
-     change:(v.revenue>0?(v.ga/v.revenue*100).toFixed(1):'0')+'% of Revenue', chCls:'ch-ora',
-     bar:Math.min(v.revenue>0?v.ga/v.revenue*100:0,100)},
+     change:(v.revenue>0?(v.ga/v.revenue*100).toFixed(1):'0')+'% of Revenue',
+     chCls:'ch-ora', bar:Math.min(v.revenue>0?v.ga/v.revenue*100:0,100)},
+    // 5. Net Income
     {id:'alm-ni', cls:ni>=0?'kpi-teal':'kpi-red', icon:ni>=0?'bi-bank':'bi-graph-down-arrow',
      label:'Net Income', value:peso(ni,true),
      meta:'Net Margin: '+pct(niMargin),
-     change:ni>=0?'▲ '+pct(niMargin)+' NM':'▼ Net Loss', chCls:ni>=0?'ch-up':'ch-down',
-     bar:Math.min(Math.abs(niMargin)*300,100)}
+     change:ni>=0?'▲ '+pct(niMargin)+' NM':'▼ Net Loss',
+     chCls:ni>=0?'ch-up':'ch-down',
+     bar:Math.min(Math.abs(niMargin)*300,100)},
+    // 6. Bonus Monitoring — RIGHT beside Net Income
+    {id:'alm-bonus', cls:'kpi-purple', icon:'bi-bullseye',
+     label:'Bonus Monitoring', value:bonusPct.toFixed(1)+'%',
+     meta:bonusMeta,
+     change:bonusChange, chCls:bonusChCls,
+     bar:Math.min(bonusPct,100)}
   ];
+
+  // 7. TVA card (only if data available)
   if (S.almTva) {
     cards.push({id:'alm-tva', cls:'kpi-indigo', icon:'bi-bar-chart-steps',
       label:'Actual vs Target', value:'TVA',
       meta:'Revenue · HC · Net Income vs Plan',
       change:'See Drill Down', chCls:'ch-flat', bar:70});
   }
+
   el('almKpiGrid').innerHTML = cards.map(c =>
     `<div class="col-6 col-sm-6 col-md-4 col-xl">
       <div class="kpi ${c.cls}" id="kpi-${c.id}" onclick="toggleAlmDrill('${c.id}')">
@@ -641,11 +718,15 @@ function renderAlmKPIs() {
   ).join('');
 }
 
+// ─────────────────────────────────────────────────────────────
+//  ALM DRILL TOGGLE
+// ─────────────────────────────────────────────────────────────
 function toggleAlmDrill(id) {
   if (S.almActiveDrill === id) {
     S.almActiveDrill = null;
     document.querySelectorAll('#view-alm .kpi').forEach(c => c.classList.remove('active'));
-    el('almDrillPanel').style.display = 'none'; return;
+    el('almDrillPanel').style.display = 'none';
+    return;
   }
   S.almActiveDrill = id;
   document.querySelectorAll('#view-alm .kpi').forEach(c => c.classList.remove('active'));
@@ -662,6 +743,7 @@ function openAlmDrill(id) {
     'alm-gp':      {title:'📈 Gross Profit Detail',                sub:'Revenue vs direct costs',                      cls:'dp-green'},
     'alm-ga':      {title:'🏢 G&A Expenses Breakdown',             sub:'Compensation · G&A Detail',                    cls:'dp-orange'},
     'alm-ni':      {title:'💰 Net Income — Monthly Detail',        sub:'Bottom-line performance per month',             cls:v&&v.ni>=0?'dp-teal':'dp-red'},
+    'alm-bonus':   {title:'🎯 Bonus Monitoring — ALM',             sub:'Monthly commission vs ₱50K target · Annual achievement', cls:'dp-purple'},
     'alm-tva':     {title:'📊 Actual vs Target',                   sub:'Revenue · HC · Net Income vs Plan',            cls:'dp-indigo'}
   };
   const c = cfgs[id]; if (!c) return;
@@ -669,19 +751,28 @@ function openAlmDrill(id) {
   const panel = el('almDrillPanel');
   panel.style.display = 'block';
   panel.className = 'drill-panel ' + c.cls;
-  panel.innerHTML = `<div class="drill-header"><div class="drill-header-left"><h3>${c.title}</h3><p>${c.sub} · ${plbl()} ${S.year}</p></div><button class="drill-close" onclick="toggleAlmDrill('${id}')">✕</button></div><div class="drill-body">${buildAlmDrillBody(id)}</div>`;
+  panel.innerHTML = `
+    <div class="drill-header">
+      <div class="drill-header-left"><h3>${c.title}</h3><p>${c.sub} · ${plbl()} ${S.year}</p></div>
+      <button class="drill-close" onclick="toggleAlmDrill('${id}')">✕</button>
+    </div>
+    <div class="drill-body">${buildAlmDrillBody(id)}</div>`;
   setTimeout(() => {
     initAlmDrillChart(id);
     panel.scrollIntoView({behavior:'smooth', block:'nearest'});
   }, 350);
 }
 
+// ─────────────────────────────────────────────────────────────
+//  ALM DRILL BODY BUILDER
+// ─────────────────────────────────────────────────────────────
 function buildAlmDrillBody(id) {
   const d = S.almData, v = getAlmVals();
   const m = S.month, isAll = m === 'all';
   const g = obj => obj ? (isAll ? (obj.YTD||0) : (obj[m]||0)) : 0;
   window._almSetDrillTab = (key) => { S.almDrillTab[id] = key; openAlmDrill(id); };
 
+  // ── Revenue ──────────────────────────────────────────────────
   if (id === 'alm-revenue') {
     const tabBar = `<div class="drill-tabs">
       <button class="dtab${S.almDrillTab[id]!=='table'?' active':''}" onclick="_almSetDrillTab('chart')"><i class="bi bi-bar-chart me-1"></i>Chart</button>
@@ -690,12 +781,11 @@ function buildAlmDrillBody(id) {
     const hcHtml = `<div class="hc-card mb-3"><div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:12px;">Headcount & Working Days · ${plbl()} ${S.year}</div><div class="hc-card-grid"><div class="hc-stat"><div class="hc-stat-val">${v.hc}</div><div class="hc-stat-lbl">Total Headcount</div><div class="hc-stat-sub">Active deployed</div></div><div class="hc-stat"><div class="hc-stat-val">${v.wd.toFixed(2)}</div><div class="hc-stat-lbl">Working Days</div><div class="hc-stat-sub">Avg per month</div></div><div class="hc-stat"><div class="hc-stat-val">${d.clients.length}</div><div class="hc-stat-lbl">Client Count</div><div class="hc-stat-sub">Active companies</div></div><div class="hc-stat"><div class="hc-stat-val">${peso(v.revenue,true)}</div><div class="hc-stat-lbl">Service Revenue</div><div class="hc-stat-sub">${plbl()}</div></div></div></div>`;
     const sorted = [...d.clients].sort((a,b)=>(g(b.revenue))-(g(a.revenue))).filter(c=>g(c.revenue)>0||g(c.hc)>0);
     const clientCardsHtml = `<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#94a3b8;margin-bottom:8px;">Per-Client Revenue · ${plbl()}</div><div class="client-grid">${sorted.map(c=>`<div class="client-card"><div class="client-card-name">${c.name}</div><div class="client-card-amt">${peso(g(c.revenue),true)}</div><div class="client-card-meta">HC: ${g(c.hc)} · WD: ${g(c.wd).toFixed(1)}</div></div>`).join('')}</div>`;
-    if (S.almDrillTab[id] === 'table') {
-      return hcHtml + tabBar + buildAlmClientTable(d.clients, m, isAll);
-    }
+    if (S.almDrillTab[id] === 'table') return hcHtml + tabBar + buildAlmClientTable(d.clients, m, isAll);
     return hcHtml + clientCardsHtml + tabBar + `<div style="height:300px;margin-top:4px;"><canvas id="almDrillCanvas"></canvas></div>`;
   }
 
+  // ── Headcount ────────────────────────────────────────────────
   if (id === 'alm-hc') {
     const tabBar = `<div class="drill-tabs">
       <button class="dtab${S.almDrillTab[id]!=='table'?' active':''}" onclick="_almSetDrillTab('chart')"><i class="bi bi-bar-chart me-1"></i>Chart</button>
@@ -709,6 +799,7 @@ function buildAlmDrillBody(id) {
     return stats + tabBar + `<div style="height:300px;"><canvas id="almDrillCanvas"></canvas></div>`;
   }
 
+  // ── Gross Profit ──────────────────────────────────────────────
   if (id === 'alm-gp') {
     const tabBar = `<div class="drill-tabs">
       <button class="dtab${S.almDrillTab[id]!=='table'?' active':''}" onclick="_almSetDrillTab('chart')"><i class="bi bi-bar-chart me-1"></i>Chart</button>
@@ -722,6 +813,7 @@ function buildAlmDrillBody(id) {
     return stats + tabBar + `<div style="height:300px;"><canvas id="almDrillCanvas"></canvas></div>`;
   }
 
+  // ── G&A ───────────────────────────────────────────────────────
   if (id === 'alm-ga') {
     const ga = d.gaExpenses;
     const total = g(ga.total), compTotal = g(ga.compensation), interest = g(ga.interest), depr = g(ga.depreciation);
@@ -753,6 +845,7 @@ function buildAlmDrillBody(id) {
     return stats + subCardHtml + contentTabs + `<div id="almGaSubContent" class="opex-content-area">${buildAlmGaSubContent()}</div>`;
   }
 
+  // ── Net Income ────────────────────────────────────────────────
   if (id === 'alm-ni') {
     const tabBar = `<div class="drill-tabs">
       <button class="dtab${S.almDrillTab[id]!=='table'?' active':''}" onclick="_almSetDrillTab('chart')"><i class="bi bi-bar-chart me-1"></i>Chart</button>
@@ -761,15 +854,156 @@ function buildAlmDrillBody(id) {
     const stats = `<div class="drill-stats"><div class="dstat highlight"><div class="dstat-val" style="color:${v.ni>=0?'var(--green)':'var(--red)'}">${peso(v.ni,true)}</div><div class="dstat-lbl">Net Income · ${plbl()}</div></div><div class="dstat"><div class="dstat-val">${peso(v.revenue,true)}</div><div class="dstat-lbl">Revenue</div></div><div class="dstat"><div class="dstat-val">${peso(v.ga,true)}</div><div class="dstat-lbl">G&A Expenses</div></div><div class="dstat"><div class="dstat-val">${pct(v.revenue>0?v.ni/v.revenue:0)}</div><div class="dstat-lbl">Net Margin</div></div></div>`;
     const rows = MONTHS.map(mo=>{const r=d.revenues.totalRevenue[mo]||0,ga2=d.gaExpenses.total[mo]||0,ni2=d.netIncome[mo]||0;if(r===0&&ga2===0)return'';const v2=ni2>=0;return`<tr><td style="font-weight:600">${mo}</td><td class="num">${peso(r)}</td><td class="num amt-neg">${peso(ga2)}</td><td class="num ${v2?'vp':'vn'}">${peso(ni2)}</td><td class="num">${r>0?pct(ni2/r):'—'}</td></tr>`;}).join('');
     const tbl = `<div class="tbl-scroll"><table class="data-table"><thead><tr><th>MONTH</th><th class="num">REVENUE</th><th class="num">G&A EXPENSES</th><th class="num">NET INCOME</th><th class="num">NET MARGIN</th></tr></thead><tbody>${rows}</tbody></table></div>`;
-    if (S.almDrillTab[id] === 'table') { return stats + tabBar + tbl; }
+    if (S.almDrillTab[id] === 'table') return stats + tabBar + tbl;
     return stats + tabBar + `<div style="height:320px;"><canvas id="almDrillCanvas"></canvas></div>` + '<div style="margin-top:16px;">' + tbl + '</div>';
   }
 
+  // ════════════════════════════════════════════════════════════
+  //  🎯 ALM BONUS MONITORING DRILL
+  // ════════════════════════════════════════════════════════════
+  if (id === 'alm-bonus') {
+    const bd = getAlmBonusData();
+    if (!bd) return '<p class="p-3 text-muted small">No bonus data available. Check that your ALM data includes commission/bonus fields.</p>';
+
+    const { rows, tp, tni, ap, at, mt, metC } = bd;
+
+    // Tab switcher
+    const tabBar = `<div class="drill-tabs">
+      <button class="dtab${S.almBonusTab !== 'table' ? ' active' : ''}" onclick="setAlmBonusTab('chart')"><i class="bi bi-bar-chart me-1"></i>Chart</button>
+      <button class="dtab${S.almBonusTab === 'table' ? ' active' : ''}" onclick="setAlmBonusTab('table')"><i class="bi bi-table me-1"></i>Table</button>
+    </div>`;
+
+    // Hero banner
+    const heroBanner = `
+      <div class="bonus-hero bonus-hero-alm">
+        <div style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:4px;">
+          Annual Commission Achievement — ALM · FY ${S.year}
+        </div>
+        <div class="d-flex align-items-end flex-wrap gap-4 mb-3">
+          <div style="font-size:46px;font-weight:900;line-height:1;letter-spacing:-2px;">
+            ${(ap*100).toFixed(1)}<span style="font-size:22px;color:rgba(255,255,255,.6)">%</span>
+          </div>
+          <div class="d-flex flex-wrap gap-3 pb-2">
+            <div>
+              <div style="font-size:14px;font-weight:700">${peso(tp,true)}</div>
+              <div style="font-size:10px;color:rgba(255,255,255,.5)">Total Progress</div>
+            </div>
+            <div>
+              <div style="font-size:14px;font-weight:700">${peso(at,true)}</div>
+              <div style="font-size:10px;color:rgba(255,255,255,.5)">Annual Target</div>
+            </div>
+            <div>
+              <div style="font-size:14px;font-weight:700;color:${ap>=1?'#86efac':'rgba(255,255,255,.8)'}">
+                ${ap>=1 ? '✅ Exceeded!' : peso(at-tp,true)+' left'}
+              </div>
+              <div style="font-size:10px;color:rgba(255,255,255,.5)">Remaining</div>
+            </div>
+            <div>
+              <div style="font-size:14px;font-weight:700">${metC}/12</div>
+              <div style="font-size:10px;color:rgba(255,255,255,.5)">Months Met</div>
+            </div>
+          </div>
+        </div>
+        <div style="height:8px;background:rgba(255,255,255,.12);border-radius:4px;overflow:hidden;">
+          <div style="height:100%;width:${Math.min(ap*100,100).toFixed(1)}%;background:linear-gradient(90deg,#a78bfa,#7c3aed);border-radius:4px;transition:width .8s;"></div>
+        </div>
+      </div>`;
+
+    // Quick stats row
+    const statsRow = `<div class="drill-stats" style="margin-bottom:18px;">
+      <div class="dstat highlight-purple">
+        <div class="dstat-val">${(ap*100).toFixed(1)}%</div>
+        <div class="dstat-lbl">Annual Achievement</div>
+      </div>
+      <div class="dstat">
+        <div class="dstat-val">${peso(tp,true)}</div>
+        <div class="dstat-lbl">YTD Progress</div>
+      </div>
+      <div class="dstat">
+        <div class="dstat-val">${peso(mt)}</div>
+        <div class="dstat-lbl">Monthly Target</div>
+      </div>
+      <div class="dstat">
+        <div class="dstat-val">${metC}/12</div>
+        <div class="dstat-lbl">Months Met</div>
+      </div>
+      <div class="dstat">
+        <div class="dstat-val" style="color:${tni>=0?'var(--green)':'var(--red)'}">${peso(tni,true)}</div>
+        <div class="dstat-lbl">Total Net Income</div>
+      </div>
+    </div>`;
+
+    // Chart section
+    const chartSection = `<div style="height:280px;margin-bottom:20px;"><canvas id="almBonusCanvas"></canvas></div>`;
+
+    // Monthly table with battery bars
+    const thead = `<thead><tr>
+      <th>MONTH</th>
+      <th class="num">TARGET</th>
+      <th class="num">PROGRESS</th>
+      <th class="num">VARIANCE</th>
+      <th>BATTERY</th>
+      <th class="num">%</th>
+      <th class="num">NET INCOME</th>
+      <th>STATUS</th>
+    </tr></thead>`;
+
+    const tbody = rows.map(r => {
+      const cap = Math.min(r.pa * 100, 100).toFixed(1);
+      const bc  = r.pa >= 1 ? 'hi' : r.pa >= .5 ? 'med' : 'low';
+      const batt = r.met
+        ? `<div class="batt-wrap"><div class="batt-track"><div class="batt-fill hi" style="width:100%"></div></div><span class="batt-met">🏆 MET</span></div>`
+        : `<div class="batt-wrap"><div class="batt-track"><div class="batt-fill ${bc}" style="width:${cap}%"></div></div><span class="batt-lbl">${(r.pa*100).toFixed(1)}%</span></div>`;
+      const niS = r.ni >= 0
+        ? '<span class="spill profit">✅ Profit</span>'
+        : '<span class="spill loss">🔴 Loss</span>';
+      return `<tr>
+        <td style="font-weight:600">${r.m}</td>
+        <td class="num">${peso(mt)}</td>
+        <td class="num" style="font-weight:600">${peso(r.prog)}</td>
+        <td class="num ${r.va>=0?'vp':'vn'}">${r.va>=0?'+':''}${peso(r.va)}</td>
+        <td>${batt}</td>
+        <td class="num" style="font-weight:700">${(r.pa*100).toFixed(1)}%</td>
+        <td class="num ${r.ni>=0?'vp':'vn'}">${peso(r.ni)}</td>
+        <td>${niS}</td>
+      </tr>`;
+    }).join('');
+
+    const annualBatt = `<div class="batt-wrap"><div class="batt-track"><div class="batt-fill ${ap>=1?'hi':ap>=.5?'med':'low'}" style="width:${Math.min(ap*100,100).toFixed(1)}%"></div></div><span class="batt-lbl">${(ap*100).toFixed(1)}%</span></div>`;
+    const totalRow = `<tr class="tot">
+      <td>ANNUAL TOTAL</td>
+      <td class="num">${peso(at)}</td>
+      <td class="num">${peso(tp)}</td>
+      <td class="num ${ap>=1?'vp':'vn'}">${ap>=1?'+':''}${peso(tp-at)}</td>
+      <td>${annualBatt}</td>
+      <td class="num">${(ap*100).toFixed(1)}%</td>
+      <td class="num ${tni>=0?'vp':'vn'}">${peso(tni)}</td>
+      <td style="font-size:11px;color:rgba(255,255,255,.7)">${metC}/12 met</td>
+    </tr>`;
+
+    const tableSection = `<div class="tbl-scroll"><table class="data-table">${thead}<tbody>${tbody}${totalRow}</tbody></table></div>`;
+
+    if (S.almBonusTab === 'table') {
+      return heroBanner + statsRow + tabBar + tableSection;
+    }
+    return heroBanner + statsRow + tabBar + chartSection + tableSection;
+  }
+
+  // ── TVA ───────────────────────────────────────────────────────
   if (id === 'alm-tva') { return buildAlmTvaDrill(); }
+
   return '<p class="p-3 text-muted small">No detail available.</p>';
 }
 
-// ─── ALM G&A SUB-DRILL ───────────────────────────────────────────────────────
+// Bonus tab toggle
+function setAlmBonusTab(tab) {
+  S.almBonusTab = tab;
+  if (S.almActiveDrill === 'alm-bonus') openAlmDrill('alm-bonus');
+}
+
+// ─────────────────────────────────────────────────────────────
+//  ALM G&A SUB-DRILL
+// ─────────────────────────────────────────────────────────────
 function setAlmGaSub(sub) {
   S.almGaSub = sub;
   if (S.almActiveDrill === 'alm-ga') openAlmDrill('alm-ga');
@@ -890,12 +1124,7 @@ function initAlmGaSubChart(sub) {
       tooltip: {
         backgroundColor:'#fff', borderColor:C.border, borderWidth:1.5,
         titleColor:C.text, bodyColor:C.muted, padding:10, cornerRadius:8,
-        callbacks: {
-          label: c => {
-            const tot = c.dataset.data.reduce((s,v)=>s+v,0)||1;
-            return ` ${c.label}: ${peso(c.raw)} (${(c.raw/tot*100).toFixed(1)}%)`;
-          }
-        }
+        callbacks: { label: c => { const tot = c.dataset.data.reduce((s,v)=>s+v,0)||1; return ` ${c.label}: ${peso(c.raw)} (${(c.raw/tot*100).toFixed(1)}%)`; } }
       }
     }
   };
@@ -912,10 +1141,7 @@ function initAlmGaSubChart(sub) {
     ].filter(ci => g(ci.d) > 0);
     S.charts.almGaSub = new Chart(ctx, {
       type: 'doughnut',
-      data: {
-        labels: compItems.map(i => i.l),
-        datasets: [{ data: compItems.map(i => g(i.d)), backgroundColor: compItems.map(i => i.c), borderColor:'#fff', borderWidth:3, hoverOffset:8 }]
-      },
+      data: { labels: compItems.map(i=>i.l), datasets: [{ data: compItems.map(i=>g(i.d)), backgroundColor: compItems.map(i=>i.c), borderColor:'#fff', borderWidth:3, hoverOffset:8 }] },
       options: donutOpts
     });
   } else {
@@ -925,10 +1151,7 @@ function initAlmGaSubChart(sub) {
       .filter(i => i.v > 0).sort((a, b) => b.v - a.v).slice(0, 10);
     S.charts.almGaSub = new Chart(ctx, {
       type: 'doughnut',
-      data: {
-        labels: items.map(i => i.l),
-        datasets: [{ data: items.map(i => i.v), backgroundColor: items.map(i => i.c), borderColor:'#fff', borderWidth:3, hoverOffset:8 }]
-      },
+      data: { labels: items.map(i=>i.l), datasets: [{ data: items.map(i=>i.v), backgroundColor: items.map(i=>i.c), borderColor:'#fff', borderWidth:3, hoverOffset:8 }] },
       options: donutOpts
     });
   }
@@ -946,25 +1169,124 @@ function buildAlmClientTable(clients, m, isAll) {
 // ALM TVA Drill
 function buildAlmTvaDrill() {
   if (!S.almTva) {
-    return `<div class="p-4"><p style="color:var(--orange);font-weight:600;font-size:13px;">⚠ ALM Target vs Actual not configured</p><p style="color:var(--gray500);font-size:12px;margin-top:8px;">To enable this, set <code>ALM_TVA_API</code> at the top of the script to your deployed ALM TVA Apps Script URL.</p></div>`;
+    return `<div class="p-4"><p style="color:var(--orange);font-weight:600;font-size:13px;">⚠ ALM Target vs Actual not available</p><p style="color:var(--gray500);font-size:12px;margin-top:8px;">The TVA API returned no data. Check that the Apps Script is deployed and the sheet is configured correctly.</p></div>`;
   }
   const tva = S.almTva, m = S.month, isAll = m === 'all';
   const kpi = tva.kpi || {};
   const revA = isAll?(kpi.revenue?.ytdActual||0):(tva.revenue?.total?.monthly?.[m]?.actual||0);
   const revT = isAll?(kpi.revenue?.ytdTarget||0):(tva.revenue?.total?.monthly?.[m]?.target||0);
-  const niA = isAll?(kpi.netIncome?.ytdActual||0):(tva.netIncome?.monthly?.[m]?.actual||0);
-  const niT = isAll?(kpi.netIncome?.ytdTarget||0):(tva.netIncome?.monthly?.[m]?.target||0);
+  const niA  = isAll?(kpi.netIncome?.ytdActual||0):(tva.netIncome?.monthly?.[m]?.actual||0);
+  const niT  = isAll?(kpi.netIncome?.ytdTarget||0):(tva.netIncome?.monthly?.[m]?.target||0);
   const revPct = revT>0?revA/revT*100:0;
   const stats = `<div class="drill-stats"><div class="dstat highlight"><div class="dstat-val">${revPct.toFixed(1)}%</div><div class="dstat-lbl">Revenue Achievement · ${plbl()}</div></div><div class="dstat"><div class="dstat-val">${peso(revA,true)}</div><div class="dstat-lbl">Revenue Actual</div></div><div class="dstat"><div class="dstat-val">${peso(revT,true)}</div><div class="dstat-lbl">Revenue Target</div></div><div class="dstat"><div class="dstat-val" style="color:${niA>=0?'var(--green)':'var(--red)'}">${peso(niA,true)}</div><div class="dstat-lbl">Net Income Actual</div></div></div>`;
   return stats + `<div style="height:320px;margin-top:16px;"><canvas id="almDrillCanvas"></canvas></div>`;
 }
 
 // ═══════════════════════════════════════════════════════════════
-//  FIX 1: ALM DRILL CHART — client revenue bar uses correct axis labels
+//  ALM DRILL CHART INITIALIZER
 // ═══════════════════════════════════════════════════════════════
 function initAlmDrillChart(id) {
+  // G&A uses its own sub-chart
   if (id === 'alm-ga') { initAlmGaSubChart(S.almGaSub); return; }
 
+  // ── 🎯 ALM Bonus chart ────────────────────────────────────────
+  if (id === 'alm-bonus') {
+    // Only render chart in chart tab
+    if (S.almBonusTab !== 'chart') return;
+    const ctx = el('almBonusCanvas'); if (!ctx) return;
+    if (S.charts.almBonus) { S.charts.almBonus.destroy(); delete S.charts.almBonus; }
+
+    const bd = getAlmBonusData();
+    if (!bd) return;
+
+    const { rows, mt } = bd;
+    const progData  = rows.map(r => r.prog);
+    const niData    = rows.map(r => r.ni);
+    const targetLine = MONTHS.map(() => mt);
+
+    S.charts.almBonus = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: MONTHS,
+        datasets: [
+          {
+            label: 'Monthly Commission',
+            data: progData,
+            backgroundColor: progData.map(v => v >= mt ? 'rgba(124,58,237,.45)' : 'rgba(124,58,237,.2)'),
+            borderColor: progData.map(v => v >= mt ? '#7c3aed' : '#a78bfa'),
+            borderWidth: 2,
+            borderRadius: 6,
+            yAxisID: 'yBonus',
+            order: 3
+          },
+          {
+            label: 'Monthly Target (₱' + (mt/1000).toFixed(0) + 'K)',
+            data: targetLine,
+            type: 'line',
+            borderColor: '#f97316',
+            backgroundColor: 'transparent',
+            borderWidth: 2.5,
+            borderDash: [8, 4],
+            pointRadius: 0,
+            tension: 0,
+            yAxisID: 'yBonus',
+            order: 2
+          },
+          {
+            label: 'Net Income',
+            data: niData,
+            type: 'line',
+            borderColor: C.teal2,
+            backgroundColor: 'transparent',
+            tension: .4,
+            pointRadius: 5,
+            pointBackgroundColor: niData.map(v => v >= 0 ? C.green2 : C.red2),
+            pointBorderColor:     niData.map(v => v >= 0 ? C.green2 : C.red2),
+            pointBorderWidth: 2,
+            borderWidth: 2,
+            fill: false,
+            yAxisID: 'yNI',
+            order: 1
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { labels: { color: C.text, font: { size: 11 }, boxWidth: 10, padding: 14 } },
+          tooltip: {
+            backgroundColor: '#fff', borderColor: C.border, borderWidth: 1.5,
+            titleColor: C.text, bodyColor: C.muted, padding: 10, cornerRadius: 8,
+            callbacks: { label: c => ' ' + c.dataset.label + ': ' + peso(c.raw) }
+          }
+        },
+        scales: {
+          x: { grid: { display: false }, ticks: { color: C.muted, font: { size: 10 } } },
+          yBonus: {
+            position: 'left',
+            grid: { color: '#f1f5f9' },
+            ticks: { color: '#7c3aed', font: { size: 10 }, callback: v => peso(v, true) },
+            title: { display: true, text: 'Commission', color: '#7c3aed', font: { size: 10, weight: '600' } }
+          },
+          yNI: {
+            position: 'right',
+            grid: { drawOnChartArea: false },
+            ticks: { color: C.teal, font: { size: 10 }, callback: v => peso(v, true) },
+            title: { display: true, text: 'Net Income', color: C.teal, font: { size: 10, weight: '600' } },
+            afterDataLimits(scale) {
+              const abs = Math.max(Math.abs(scale.min), Math.abs(scale.max), 1);
+              scale.min = -abs * 1.2; scale.max = abs * 1.2;
+            }
+          }
+        }
+      }
+    });
+    return;
+  }
+
+  // ── Standard drill chart canvas ───────────────────────────────
   const ctx = el('almDrillCanvas'); if (!ctx) return;
   if (S.charts.almDrill) { S.charts.almDrill.destroy(); delete S.charts.almDrill; }
   const d = S.almData;
@@ -978,7 +1300,6 @@ function initAlmDrillChart(id) {
   const actIdx  = actMths.map(m=>MONTHS.indexOf(m));
   const filt    = arr => actIdx.map(i=>arr[i]);
 
-  // ── SHARED tooltip config ──────────────────────────────────────
   const sharedTooltip = {
     backgroundColor:'#fff', borderColor:C.border, borderWidth:1.5,
     titleColor:C.text, bodyColor:C.muted, padding:10, cornerRadius:8,
@@ -986,257 +1307,76 @@ function initAlmDrillChart(id) {
   };
   const sharedLegend = { labels:{ color:C.text, font:{size:11}, boxWidth:10, padding:12 } };
 
-  // ── FIX: Client Revenue horizontal bar — custom opts (no peso on y-axis) ──
   if (id === 'alm-revenue') {
     const mth = S.month, isAll = mth === 'all';
     const g = obj => obj?(isAll?(obj.YTD||0):(obj[mth]||0)):0;
     const sorted = [...d.clients].sort((a,b)=>g(b.revenue)-g(a.revenue)).filter(c=>g(c.revenue)>0);
     const colors = ['#f97316','#fb923c','#fdba74','#fed7aa','#c2410c','#ea580c','#f59e0b','#fbbf24','#d97706','#b45309'];
-
     S.charts.almDrill = new Chart(ctx, {
       type: 'bar',
       data: {
-        labels: sorted.map(c => c.name),   // ← client names as labels
-        datasets: [{
-          label: 'Service Revenue',
-          data: sorted.map(c => g(c.revenue)),
-          backgroundColor: sorted.map((_,i) => colors[i % colors.length] + '55'),
-          borderColor: sorted.map((_,i) => colors[i % colors.length]),
-          borderWidth: 2,
-          borderRadius: 5
-        }]
+        labels: sorted.map(c => c.name),
+        datasets: [{ label: 'Service Revenue', data: sorted.map(c => g(c.revenue)), backgroundColor: sorted.map((_,i) => colors[i%colors.length]+'55'), borderColor: sorted.map((_,i) => colors[i%colors.length]), borderWidth: 2, borderRadius: 5 }]
       },
-      options: {
-        indexAxis: 'y',
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            backgroundColor:'#fff', borderColor:C.border, borderWidth:1.5,
-            titleColor:C.text, bodyColor:C.muted, padding:10, cornerRadius:8,
-            callbacks:{ label: c => ' Service Revenue: ' + peso(c.raw) }
-          }
-        },
-        scales: {
-          // y-axis = categorical (client names) — NO formatter
-          y: {
-            grid: { display: false },
-            ticks: {
-              color: C.text,
-              font: { size: 10, weight: '600' },
-              // No callback → shows label string as-is
-            }
-          },
-          // x-axis = numeric revenue — use peso formatter
-          x: {
-            grid: { color: '#f1f5f9' },
-            ticks: {
-              color: C.muted,
-              font: { size: 10 },
-              callback: v => peso(v, true)
-            }
-          }
-        }
-      }
+      options: { indexAxis:'y', responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false}, tooltip:{ backgroundColor:'#fff', borderColor:C.border, borderWidth:1.5, titleColor:C.text, bodyColor:C.muted, padding:10, cornerRadius:8, callbacks:{label:c=>' Service Revenue: '+peso(c.raw)} } }, scales:{ y:{grid:{display:false},ticks:{color:C.text,font:{size:10,weight:'600'}}}, x:{grid:{color:'#f1f5f9'},ticks:{color:C.muted,font:{size:10},callback:v=>peso(v,true)}} } }
     });
     return;
   }
 
   if (id === 'alm-hc') {
-    S.charts.almDrill = new Chart(ctx,{type:'bar',data:{labels:actMths,datasets:[
-      {label:'Headcount',data:filt(hcArr),backgroundColor:'rgba(79,70,229,.3)',borderColor:C.indigo,borderWidth:2,borderRadius:5,yAxisID:'yHC'},
-      {label:'Working Days',data:filt(wdArr),type:'line',borderColor:C.orange2,backgroundColor:'transparent',tension:.4,pointRadius:4,borderWidth:2.5,yAxisID:'yWD'}
-    ]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},scales:{yHC:{type:'linear',position:'left',grid:{color:'#f1f5f9'},ticks:{color:C.indigo,font:{size:10}}},yWD:{type:'linear',position:'right',grid:{drawOnChartArea:false},ticks:{color:C.orange2,font:{size:10}}}},plugins:{legend:{labels:{color:C.text,font:{size:11},boxWidth:10}},tooltip:sharedTooltip}}}); return;
+    S.charts.almDrill = new Chart(ctx,{type:'bar',data:{labels:actMths,datasets:[{label:'Headcount',data:filt(hcArr),backgroundColor:'rgba(79,70,229,.3)',borderColor:C.indigo,borderWidth:2,borderRadius:5,yAxisID:'yHC'},{label:'Working Days',data:filt(wdArr),type:'line',borderColor:C.orange2,backgroundColor:'transparent',tension:.4,pointRadius:4,borderWidth:2.5,yAxisID:'yWD'}]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},scales:{yHC:{type:'linear',position:'left',grid:{color:'#f1f5f9'},ticks:{color:C.indigo,font:{size:10}}},yWD:{type:'linear',position:'right',grid:{drawOnChartArea:false},ticks:{color:C.orange2,font:{size:10}}}},plugins:{legend:sharedLegend,tooltip:sharedTooltip}}});
+    return;
   }
 
   if (id === 'alm-gp') {
-    S.charts.almDrill = new Chart(ctx,{type:'bar',data:{labels:actMths,datasets:[
-      {label:'Revenue',data:filt(revArr),backgroundColor:'rgba(249,115,22,.2)',borderColor:C.orange2,borderWidth:2,borderRadius:5},
-      {label:'Gross Profit',data:filt(gpArr),backgroundColor:'rgba(34,197,94,.25)',borderColor:C.green2,borderWidth:2,borderRadius:5}
-    ]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:sharedLegend,tooltip:sharedTooltip},scales:{x:{grid:{display:false},ticks:{color:C.muted,font:{size:10}}},y:{grid:{color:'#f1f5f9'},ticks:{color:C.muted,font:{size:10},callback:v=>peso(v,true)}}}}}); return;
+    S.charts.almDrill = new Chart(ctx,{type:'bar',data:{labels:actMths,datasets:[{label:'Revenue',data:filt(revArr),backgroundColor:'rgba(249,115,22,.2)',borderColor:C.orange2,borderWidth:2,borderRadius:5},{label:'Gross Profit',data:filt(gpArr),backgroundColor:'rgba(34,197,94,.25)',borderColor:C.green2,borderWidth:2,borderRadius:5}]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:sharedLegend,tooltip:sharedTooltip},scales:{x:{grid:{display:false},ticks:{color:C.muted,font:{size:10}}},y:{grid:{color:'#f1f5f9'},ticks:{color:C.muted,font:{size:10},callback:v=>peso(v,true)}}}}});
+    return;
   }
 
-  // ── FIX 3: Net Income drill — waterfall-style bars ────────────────────────
   if (id === 'alm-ni') {
-    const niFiltered = filt(niArr);
+    const niFiltered  = filt(niArr);
     const revFiltered = filt(revArr);
     S.charts.almDrill = new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: actMths,
-        datasets: [
-          {
-            label: 'Net Income',
-            data: niFiltered,
-            backgroundColor: niFiltered.map(v => v >= 0 ? 'rgba(34,197,94,.35)' : 'rgba(239,68,68,.35)'),
-            borderColor: niFiltered.map(v => v >= 0 ? C.green2 : C.red2),
-            borderWidth: 2,
-            borderRadius: 6,
-            borderSkipped: false,
-            yAxisID: 'yNI',
-            order: 2,
-            barPercentage: .7,
-            categoryPercentage: .8
-          },
-          {
-            label: 'Revenue',
-            data: revFiltered,
-            type: 'line',
-            borderColor: C.orange2,
-            backgroundColor: C.orangeA,
-            fill: 'origin',
-            tension: .4,
-            pointRadius: 4,
-            borderWidth: 2.5,
-            pointBackgroundColor: '#fff',
-            pointBorderWidth: 2,
-            pointBorderColor: C.orange2,
-            yAxisID: 'yRev',
-            order: 1
-          }
-        ]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        interaction: { mode:'index', intersect:false },
-        plugins: { legend: sharedLegend, tooltip: sharedTooltip },
-        scales: {
-          x: { grid:{ display:false }, ticks:{ color:C.muted, font:{size:10} } },
-          yRev: {
-            position: 'left',
-            grid: { color:'#f1f5f9' },
-            ticks: { color:C.orange2, font:{size:10}, callback:v=>peso(v,true) }
-          },
-          yNI: {
-            position: 'right',
-            grid: { drawOnChartArea:false },
-            ticks: { color:C.muted, font:{size:10}, callback:v=>peso(v,true) },
-            afterDataLimits(scale){ const abs=Math.max(Math.abs(scale.min),Math.abs(scale.max)); scale.min=-abs*1.1; scale.max=abs*1.1; }
-          }
-        }
-      }
+      type:'bar',
+      data:{labels:actMths,datasets:[
+        {label:'Net Income',data:niFiltered,backgroundColor:niFiltered.map(v=>v>=0?'rgba(34,197,94,.35)':'rgba(239,68,68,.35)'),borderColor:niFiltered.map(v=>v>=0?C.green2:C.red2),borderWidth:2,borderRadius:6,borderSkipped:false,yAxisID:'yNI',order:2,barPercentage:.7,categoryPercentage:.8},
+        {label:'Revenue',data:revFiltered,type:'line',borderColor:C.orange2,backgroundColor:C.orangeA,fill:'origin',tension:.4,pointRadius:4,borderWidth:2.5,pointBackgroundColor:'#fff',pointBorderWidth:2,pointBorderColor:C.orange2,yAxisID:'yRev',order:1}
+      ]},
+      options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:sharedLegend,tooltip:sharedTooltip},scales:{x:{grid:{display:false},ticks:{color:C.muted,font:{size:10}}},yRev:{position:'left',grid:{color:'#f1f5f9'},ticks:{color:C.orange2,font:{size:10},callback:v=>peso(v,true)}},yNI:{position:'right',grid:{drawOnChartArea:false},ticks:{color:C.muted,font:{size:10},callback:v=>peso(v,true)},afterDataLimits(scale){const abs=Math.max(Math.abs(scale.min),Math.abs(scale.max));scale.min=-abs*1.1;scale.max=abs*1.1;}}}}
     });
     return;
   }
 
   if (id === 'alm-tva' && S.almTva) {
     const tva = S.almTva;
-    const niMo = tva.netIncome?.monthly||{};
+    const niMo  = tva.netIncome?.monthly||{};
     const revMo = tva.revenue?.total?.monthly||{};
     const actMths2 = MONTHS.filter(m=>revMo[m]||(niMo[m]&&(niMo[m].actual||niMo[m].target)));
     const revAct = actMths2.map(m=>revMo[m]?.actual||0);
     const revTgt = actMths2.map(m=>revMo[m]?.target||0);
     const niAct  = actMths2.map(m=>niMo[m]?.actual||0);
-    S.charts.almDrill = new Chart(ctx,{type:'bar',data:{labels:actMths2,datasets:[
-      {label:'Revenue Target',data:revTgt,backgroundColor:'rgba(203,213,225,.5)',borderColor:'#94a3b8',borderWidth:1.5,borderRadius:4,yAxisID:'yRev'},
-      {label:'Revenue Actual',data:revAct,backgroundColor:'rgba(249,115,22,.3)',borderColor:C.orange2,borderWidth:2,borderRadius:4,yAxisID:'yRev'},
-      {label:'Net Income',data:niAct,type:'line',borderColor:niAct.map(v=>v>=0?C.green2:C.red2),backgroundColor:'transparent',tension:.4,pointRadius:4,borderWidth:2,yAxisID:'yNI'}
-    ]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},scales:{yRev:{type:'linear',position:'left',grid:{color:'#f1f5f9'},ticks:{color:C.orange2,font:{size:10},callback:v=>peso(v,true)}},yNI:{type:'linear',position:'right',grid:{drawOnChartArea:false},ticks:{color:C.green2,font:{size:10},callback:v=>peso(v,true)}}},plugins:{legend:{labels:{color:C.text,font:{size:11},boxWidth:10}},tooltip:sharedTooltip}}}); return;
+    S.charts.almDrill = new Chart(ctx,{type:'bar',data:{labels:actMths2,datasets:[{label:'Revenue Target',data:revTgt,backgroundColor:'rgba(203,213,225,.5)',borderColor:'#94a3b8',borderWidth:1.5,borderRadius:4,yAxisID:'yRev'},{label:'Revenue Actual',data:revAct,backgroundColor:'rgba(249,115,22,.3)',borderColor:C.orange2,borderWidth:2,borderRadius:4,yAxisID:'yRev'},{label:'Net Income',data:niAct,type:'line',borderColor:niAct.map(v=>v>=0?C.green2:C.red2),backgroundColor:'transparent',tension:.4,pointRadius:4,borderWidth:2,yAxisID:'yNI'}]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},scales:{yRev:{type:'linear',position:'left',grid:{color:'#f1f5f9'},ticks:{color:C.orange2,font:{size:10},callback:v=>peso(v,true)}},yNI:{type:'linear',position:'right',grid:{drawOnChartArea:false},ticks:{color:C.green2,font:{size:10},callback:v=>peso(v,true)}}},plugins:{legend:{labels:{color:C.text,font:{size:11},boxWidth:10}},tooltip:sharedTooltip}}});
+    return;
   }
 }
 
 // ═══════════════════════════════════════════════════════════════
-//  FIX 2: ALM BOTTOM TREND — mixed bar+line (waterfall style like NAM)
+//  ALM BOTTOM CHARTS
 // ═══════════════════════════════════════════════════════════════
 function renderAlmTrend() {
   const d = S.almData; if (!d) return;
   if(S.charts.almChartTrend){S.charts.almChartTrend.destroy();delete S.charts.almChartTrend;}
-
   const revArr = MONTHS.map(m=>d.revenues.totalRevenue[m]||0);
   const gaArr  = MONTHS.map(m=>d.gaExpenses.total[m]||0);
   const niArr  = MONTHS.map(m=>d.netIncome[m]||0);
-
   S.charts.almChartTrend = new Chart(el('almChartTrend'), {
-    type: 'bar',
-    data: {
-      labels: MONTHS,
-      datasets: [
-        // Revenue bars (orange, positive)
-        {
-          label: 'Revenue',
-          data: revArr,
-          backgroundColor: 'rgba(249,115,22,.25)',
-          borderColor: C.orange2,
-          borderWidth: 1.5,
-          borderRadius: 4,
-          yAxisID: 'yRev',
-          order: 3,
-          barPercentage: .7,
-          categoryPercentage: .85
-        },
-        // G&A bars (red, shown as positive values for visibility)
-        {
-          label: 'G&A Expenses',
-          data: gaArr,
-          backgroundColor: 'rgba(239,68,68,.2)',
-          borderColor: C.red2,
-          borderWidth: 1.5,
-          borderRadius: 4,
-          yAxisID: 'yRev',
-          order: 2,
-          barPercentage: .7,
-          categoryPercentage: .85
-        },
-        // Net Income line with colored points
-        {
-          label: 'Net Income',
-          data: niArr,
-          type: 'line',
-          borderColor: C.teal2,
-          backgroundColor: 'transparent',
-          tension: .4,
-          pointRadius: 5,
-          pointBackgroundColor: niArr.map(v => v >= 0 ? C.green2 : C.red2),
-          pointBorderColor: niArr.map(v => v >= 0 ? C.green2 : C.red2),
-          pointBorderWidth: 2,
-          borderWidth: 2,
-          borderDash: [5, 3],
-          fill: false,
-          yAxisID: 'yNI',
-          order: 1
-        }
-      ]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      interaction: { mode:'index', intersect:false },
-      plugins: {
-        legend: {
-          labels: { color:C.text, font:{size:11}, boxWidth:10, padding:12 }
-        },
-        tooltip: {
-          backgroundColor:'#fff', borderColor:C.border, borderWidth:1.5,
-          titleColor:C.text, bodyColor:C.muted, padding:10, cornerRadius:8,
-          callbacks: { label: c => ' ' + c.dataset.label + ': ' + peso(c.raw) }
-        }
-      },
-      scales: {
-        x: {
-          grid: { display:false },
-          ticks: { color:C.muted, font:{size:10} }
-        },
-        yRev: {
-          type: 'linear',
-          position: 'left',
-          grid: { color:'#f1f5f9' },
-          ticks: { color:C.orange2, font:{size:10}, callback: v => peso(v,true) }
-        },
-        yNI: {
-          type: 'linear',
-          position: 'right',
-          grid: { drawOnChartArea:false },
-          ticks: { color:C.teal2, font:{size:10}, callback: v => peso(v,true) },
-          afterDataLimits(scale){
-            const abs = Math.max(Math.abs(scale.min), Math.abs(scale.max));
-            scale.min = -abs * 1.1;
-            scale.max = abs * 1.1;
-          }
-        }
-      }
-    }
+    type:'bar',
+    data:{labels:MONTHS,datasets:[
+      {label:'Revenue',data:revArr,backgroundColor:'rgba(249,115,22,.25)',borderColor:C.orange2,borderWidth:1.5,borderRadius:4,yAxisID:'yRev',order:3,barPercentage:.7,categoryPercentage:.85},
+      {label:'G&A Expenses',data:gaArr,backgroundColor:'rgba(239,68,68,.2)',borderColor:C.red2,borderWidth:1.5,borderRadius:4,yAxisID:'yRev',order:2,barPercentage:.7,categoryPercentage:.85},
+      {label:'Net Income',data:niArr,type:'line',borderColor:C.teal2,backgroundColor:'transparent',tension:.4,pointRadius:5,pointBackgroundColor:niArr.map(v=>v>=0?C.green2:C.red2),pointBorderColor:niArr.map(v=>v>=0?C.green2:C.red2),pointBorderWidth:2,borderWidth:2,borderDash:[5,3],fill:false,yAxisID:'yNI',order:1}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{labels:{color:C.text,font:{size:11},boxWidth:10,padding:12}},tooltip:{backgroundColor:'#fff',borderColor:C.border,borderWidth:1.5,titleColor:C.text,bodyColor:C.muted,padding:10,cornerRadius:8,callbacks:{label:c=>' '+c.dataset.label+': '+peso(c.raw)}}},scales:{x:{grid:{display:false},ticks:{color:C.muted,font:{size:10}}},yRev:{type:'linear',position:'left',grid:{color:'#f1f5f9'},ticks:{color:C.orange2,font:{size:10},callback:v=>peso(v,true)}},yNI:{type:'linear',position:'right',grid:{drawOnChartArea:false},ticks:{color:C.teal2,font:{size:10},callback:v=>peso(v,true)},afterDataLimits(scale){const abs=Math.max(Math.abs(scale.min),Math.abs(scale.max));scale.min=-abs*1.1;scale.max=abs*1.1;}}}}
   });
 }
 
@@ -1248,14 +1388,11 @@ function renderAlmHcChart() {
   const actMths = MONTHS.filter((_,i)=>hcArr[i]>0);
   const actIdx  = actMths.map(m=>MONTHS.indexOf(m));
   const filt    = arr => actIdx.map(i=>arr[i]);
-  S.charts.almChartHC = new Chart(el('almChartHC'),{type:'bar',data:{labels:actMths,datasets:[
-    {label:'Headcount',data:filt(hcArr),backgroundColor:'rgba(194,65,12,.3)',borderColor:C.orange,borderWidth:2,borderRadius:5,yAxisID:'yHC'},
-    {label:'Working Days',data:filt(wdArr),type:'line',borderColor:'#7c3aed',backgroundColor:'transparent',tension:.4,pointRadius:4,borderWidth:2,yAxisID:'yWD'}
-  ]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},scales:{yHC:{type:'linear',position:'left',grid:{color:'#f1f5f9'},ticks:{color:C.orange,font:{size:10},callback:v=>v+' HC'}},yWD:{type:'linear',position:'right',grid:{drawOnChartArea:false},ticks:{color:'#7c3aed',font:{size:10},callback:v=>v+' WD'}}},plugins:{legend:{labels:{color:C.text,font:{size:11},boxWidth:10}},tooltip:{backgroundColor:'#fff',borderColor:C.border,borderWidth:1.5,titleColor:C.text,bodyColor:C.muted,padding:10,cornerRadius:8}}}});
+  S.charts.almChartHC = new Chart(el('almChartHC'),{type:'bar',data:{labels:actMths,datasets:[{label:'Headcount',data:filt(hcArr),backgroundColor:'rgba(194,65,12,.3)',borderColor:C.orange,borderWidth:2,borderRadius:5,yAxisID:'yHC'},{label:'Working Days',data:filt(wdArr),type:'line',borderColor:'#7c3aed',backgroundColor:'transparent',tension:.4,pointRadius:4,borderWidth:2,yAxisID:'yWD'}]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},scales:{yHC:{type:'linear',position:'left',grid:{color:'#f1f5f9'},ticks:{color:C.orange,font:{size:10},callback:v=>v+' HC'}},yWD:{type:'linear',position:'right',grid:{drawOnChartArea:false},ticks:{color:'#7c3aed',font:{size:10},callback:v=>v+' WD'}}},plugins:{legend:{labels:{color:C.text,font:{size:11},boxWidth:10}},tooltip:{backgroundColor:'#fff',borderColor:C.border,borderWidth:1.5,titleColor:C.text,bodyColor:C.muted,padding:10,cornerRadius:8}}}});
 }
 
 // ═══════════════════════════════════════════════════════════════
-//  NAM Trading / Builders (unchanged)
+//  NAM TRADING / BUILDERS RENDER (unchanged from original)
 // ═══════════════════════════════════════════════════════════════
 function getVals() {
   const d = S.data, m = S.month, isAll = m === 'all', i = MONTHS.indexOf(m);
@@ -1381,6 +1518,8 @@ function getTvaExpSchema(){const co=S.company;if(co==='trading'){return[{l:'Sala
 function buildTvaSubBars(){if(!S.tva)return'';const sub=S.tvaSub,tva=S.tva,m=S.month,isYTD=m==='all';const getA=row=>!row?0:(isYTD?(row.ytd?row.ytd.actual:0):((row.monthly&&row.monthly[m])?row.monthly[m].actual:0));const getT=row=>!row?0:(isYTD?(row.ytd?row.ytd.target:0):((row.monthly&&row.monthly[m])?row.monthly[m].target:0));const lbl=isYTD?'YTD':m;let items=[],title='';if(sub==='revenue'){title=`Revenue Line Items · ${lbl}`;const rev=tva.revenue;const revSchema=getTvaRevSchema();items=revSchema.map(s=>({l:s.l,v:rev[s.key]?getA(rev[s.key]):0,t:rev[s.key]?getT(rev[s.key]):0,c:s.c})).filter(i=>i.t>0||i.v>0);}else if(sub==='expenses'){title=`Top Expenses vs Target · ${lbl}`;const exp=tva.expenses;const eMap=getTvaExpSchema();items=eMap.map(i=>({l:i.l,v:exp[i.k]?getA(exp[i.k]):0,t:exp[i.k]?getT(exp[i.k]):0,c:i.c})).filter(i=>i.t>0||i.v>0).sort((a,b)=>b.v-a.v).slice(0,8);}else{if(isYTD){title='Net Income by Month';const niRowM=(tva.netIncome&&tva.netIncome.monthly)||{};items=MONTHS.filter(mo=>niRowM[mo]&&(niRowM[mo].actual!==0||niRowM[mo].target!==0)).map(mo=>({l:mo,v:niRowM[mo].actual,t:niRowM[mo].target,c:niRowM[mo].actual>=0?C.green2:C.red2}));}else{title=`${m} Overview`;const revRow=(tva.revenue&&tva.revenue.total&&tva.revenue.total.monthly&&tva.revenue.total.monthly[m])||{};const expRow=(tva.expenses&&tva.expenses.total&&tva.expenses.total.monthly&&tva.expenses.total.monthly[m])||{};const niRow=(tva.netIncome&&tva.netIncome.monthly&&tva.netIncome.monthly[m])||{};items=[{l:'Revenue',v:revRow.actual||0,t:revRow.target||0,c:C.indigo},{l:'Expenses',v:expRow.actual||0,t:expRow.target||0,c:C.orange2},{l:'Net Income',v:niRow.actual||0,t:niRow.target||0,c:(niRow.actual||0)>=0?C.green2:C.red2}].filter(i=>i.t!==0||i.v!==0);}}if(!items.length)return`<div class="drill-viz-bars"><p style="font-size:11px;color:#94a3b8;padding-top:20px;">No data yet for this period.</p></div>`;const max=Math.max(...items.map(i=>Math.max(Math.abs(i.v),Math.abs(i.t||0))),1);const bars=items.map(it=>{const achPct=it.t!==0?((Math.abs(it.v)/Math.abs(it.t))*100).toFixed(0):'—';const barW=(Math.min(Math.abs(it.v)/max,1)*100).toFixed(1);return`<div class="mb"><div class="mb-top"><span class="mb-name"><span class="mb-dot" style="background:${it.c}"></span>${it.l}</span><span class="mb-val">${peso(it.v,true)} <span style="color:#94a3b8;font-size:10px">${achPct!=='—'?achPct+'%':'—'}</span></span></div><div class="mb-track"><div class="mb-fill" style="width:${barW}%;background:${it.c}"></div></div></div>`;}).join('');return`<div class="drill-viz-bars"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#94a3b8;margin-bottom:10px;">${title}</div>${bars}</div>`;}
 function buildTvaSubTable(){if(!S.tva)return'<p class="p-3 text-muted small">No TVA data.</p>';const sub=S.tvaSub,tva=S.tva,m=S.month,isYTD=m==='all';const wrap=html=>`<div class="tbl-scroll">${html}</div>`;const H=cols=>'<thead><tr>'+cols.map((c,i)=>`<th${i?' class="num"':''}>${c}</th>`).join('')+'</tr></thead>';const statusBadge=(actual,target,isExp)=>{if(actual===0&&target===0)return'<span style="color:#94a3b8">—</span>';const met=isExp?actual<=target:actual>=target;return met?'✅':'❌';};const rowVals=(d2)=>{if(!d2)return{a:0,t:0,v:0};if(isYTD){const ytd=d2.ytd||{};return{a:ytd.actual||0,t:ytd.target||0,v:ytd.variance||0};}const mo=(d2.monthly&&d2.monthly[m])||{};const a=mo.actual||0,t=mo.target||0;return{a,t,v:a-t};};const colHeader=isYTD?'YTD ACTUAL':`${m} ACTUAL`;const varHeader=isYTD?'YTD VARIANCE':`${m} VARIANCE`;if(sub==='revenue'){const rev=tva.revenue;const revSchema=getTvaRevSchema();const items=revSchema.map(s=>({l:s.l,d:rev[s.key]||null})).filter(it=>it.d);const totItem={l:'TOTAL REVENUE',d:rev.total,isTot:true};if(isYTD){return wrap('<table class="data-table">'+H(['DESCRIPTION','MONTHLY TARGET',...MONTHS,'YTD ACTUAL','YTD VARIANCE','%','✓'])+'<tbody>'+[...items,totItem].map(it=>{if(!it.d)return'';const{a,t,v}=rowVals(it.d);const achP=t!==0?((a/t)*100).toFixed(1)+'%':'—';const mCells=MONTHS.map(mo=>`<td class="num">${peso(it.d.monthly[mo]?it.d.monthly[mo].actual:0)}</td>`).join('');return`<tr${it.isTot?' class="tot"':''}><td>${it.l}</td><td class="num">${peso(it.d.monthlyTarget)}</td>${mCells}<td class="num" style="font-weight:600">${peso(a)}</td><td class="num ${v>=0?'vp':'vn'}">${v>=0?'+':''}${peso(v)}</td><td class="num">${achP}</td><td class="num">${statusBadge(a,t,false)}</td></tr>`;}).join('')+'</tbody></table>');}else{return wrap('<table class="data-table">'+H(['DESCRIPTION','TARGET',colHeader,varHeader,'%','✓'])+'<tbody>'+[...items,totItem].map(it=>{if(!it.d)return'';const{a,t,v}=rowVals(it.d);const achP=t!==0?((a/t)*100).toFixed(1)+'%':'—';return`<tr${it.isTot?' class="tot"':''}><td>${it.l}</td><td class="num">${peso(t)}</td><td class="num" style="font-weight:600">${peso(a)}</td><td class="num ${v>=0?'vp':'vn'}">${v>=0?'+':''}${peso(v)}</td><td class="num">${achP}</td><td class="num">${statusBadge(a,t,false)}</td></tr>`;}).join('')+'</tbody></table>');}}if(sub==='expenses'){const exp=tva.expenses;const allExpKeys=Object.keys(exp).filter(k=>k!=='total');const allExpLabels={salariesWages:'Salaries & Wages',postage:'Postage & Telecom',officeRental:'Office Rental Fee',carRentalKia:'Car Rental Fee — KIA',meals:'Meals & Refreshments',professional:'Professional & Consultant Fee',transportation:'Transportation',interestLoan:'Interest on Loan Payable',miscellaneous:'Miscellaneous Expense',taxesLicenses:'Taxes, Licenses & Permits',amortMarketing:'Amort. — Marketing',amortOfficeEquip:'Amort. — Office Equip.',amortMotorcycle:'Amort. — Motorcycle',amortTrainings:'Amort. — Trainings',materials:'Materials',officeSuppliesDirect:'Office Supplies (Direct)',officeFurniture:'Office Furniture & Fixtures',otherDirect:'Other Direct Costs',commissionsDir:'Commissions – Direct',officeSupplies:'Office Supplies',pantrySupplies:'Pantry Supplies',carRental:'Car Rental Fee',electricWater:'Electric, Water & Insurance',staffHouse:'Staff House',thanksgivingMass:'Thanksgiving Mass',waterRefill:'Water Refill',professionalFee:'Professional Fee',amortization:'Amortization'};const items=allExpKeys.map(k=>({l:allExpLabels[k]||k,d:exp[k]})).filter(it=>it.d&&(it.d.annualTarget!==0||it.d.annualActual!==0||(it.d.ytd&&it.d.ytd.actual!==0)));const totItem={l:'TOTAL EXPENSES',d:exp.total,isTot:true};if(isYTD){return wrap('<table class="data-table">'+H(['DESCRIPTION','MONTHLY TARGET',...MONTHS,'YTD ACTUAL','YTD VARIANCE','%','✓'])+'<tbody>'+[...items,totItem].map(it=>{if(!it.d)return'';const{a,t,v}=rowVals(it.d);const achP=t!==0?((a/t)*100).toFixed(1)+'%':'—';const mCells=MONTHS.map(mo=>`<td class="num">${peso(it.d.monthly[mo]?it.d.monthly[mo].actual:0)}</td>`).join('');return`<tr${it.isTot?' class="tot"':''}><td>${it.l}</td><td class="num">${peso(it.d.monthlyTarget)}</td>${mCells}<td class="num" style="font-weight:600">${peso(a)}</td><td class="num ${v>0?'vn':'vp'}">${v>=0?'+':''}${peso(v)}</td><td class="num">${achP}</td><td class="num">${statusBadge(a,t,true)}</td></tr>`;}).join('')+'</tbody></table>');}else{return wrap('<table class="data-table">'+H(['DESCRIPTION','TARGET',colHeader,varHeader,'%','✓'])+'<tbody>'+[...items,totItem].map(it=>{if(!it.d)return'';const{a,t,v}=rowVals(it.d);const achP=t!==0?((a/t)*100).toFixed(1)+'%':'—';return`<tr${it.isTot?' class="tot"':''}><td>${it.l}</td><td class="num">${peso(t)}</td><td class="num" style="font-weight:600">${peso(a)}</td><td class="num ${v>0?'vn':'vp'}">${v>=0?'+':''}${peso(v)}</td><td class="num">${achP}</td><td class="num">${statusBadge(a,t,true)}</td></tr>`;}).join('')+'</tbody></table>');}}if(isYTD){const niMo=(tva.netIncome&&tva.netIncome.monthly)||{};const rows2=MONTHS.map(mo=>{const d=niMo[mo];if(!d)return'';const va=d.actual-d.target;const achP=d.target!==0?((d.actual/d.target)*100).toFixed(1)+'%':'—';return`<tr><td style="font-weight:600">${mo}</td><td class="num">${peso(d.target)}</td><td class="num">${peso(d.actual)}</td><td class="num ${va>=0?'vp':'vn'}">${va>=0?'+':''}${peso(va)}</td><td class="num">${achP}</td><td>${d.actual===0&&d.target===0?'<span style="color:#94a3b8">—</span>':d.actual>=d.target?'<span class="spill profit">✅ Met</span>':'<span class="spill loss">❌ Missed</span>'}</td></tr>`;}).join('');const niTotA=MONTHS.reduce((s,mo)=>s+(niMo[mo]?niMo[mo].actual:0),0);const niTotT=tva.kpi.netIncome.ytdTarget,niTotV=niTotA-niTotT;return wrap('<table class="data-table">'+H(['MONTH','NI TARGET','NI ACTUAL','VARIANCE','ACHIEVEMENT','STATUS'])+`<tbody>${rows2}<tr class="tot"><td>YTD TOTAL</td><td class="num">${peso(niTotT)}</td><td class="num">${peso(niTotA)}</td><td class="num ${niTotV>=0?'vp':'vn'}">${niTotV>=0?'+':''}${peso(niTotV)}</td><td class="num">${niTotT!==0?((niTotA/niTotT)*100).toFixed(1)+'%':'—'}</td><td>—</td></tr></tbody></table>`);}else{const revR=(tva.revenue&&tva.revenue.total&&tva.revenue.total.monthly&&tva.revenue.total.monthly[m])||{};const expR=(tva.expenses&&tva.expenses.total&&tva.expenses.total.monthly&&tva.expenses.total.monthly[m])||{};const niR=(tva.netIncome&&tva.netIncome.monthly&&tva.netIncome.monthly[m])||{};const rA=revR.actual||0,rT=revR.target||0,rV=rA-rT;const eA=expR.actual||0,eT=expR.target||0,eV=eA-eT;const nA=niR.actual||0,nT=niR.target||0,nV=nA-nT;return wrap('<table class="data-table">'+H(['CATEGORY','TARGET',`${m} ACTUAL`,'VARIANCE','ACHIEVEMENT','STATUS'])+`<tbody><tr><td style="font-weight:600">Revenue</td><td class="num">${peso(rT)}</td><td class="num">${peso(rA)}</td><td class="num ${rV>=0?'vp':'vn'}">${rV>=0?'+':''}${peso(rV)}</td><td class="num">${rT!==0?((rA/rT)*100).toFixed(1)+'%':'—'}</td><td>${statusBadge(rA,rT,false)}</td></tr><tr><td style="font-weight:600">Expenses</td><td class="num">${peso(eT)}</td><td class="num">${peso(eA)}</td><td class="num ${eV>0?'vn':'vp'}">${eV>=0?'+':''}${peso(eV)}</td><td class="num">${eT!==0?((eA/eT)*100).toFixed(1)+'%':'—'}</td><td>${statusBadge(eA,eT,true)}</td></tr><tr class="tot"><td>Net Income</td><td class="num">${peso(nT)}</td><td class="num">${peso(nA)}</td><td class="num ${nV>=0?'vp':'vn'}">${nV>=0?'+':''}${peso(nV)}</td><td class="num">${nT!==0?((nA/nT)*100).toFixed(1)+'%':'—'}</td><td>${statusBadge(nA,nT,false)}</td></tr></tbody></table>`);}}
 
+function initTvaSubChart(sub){const ctx=el('tvaSubCanvas');if(!ctx)return;if(S.charts.tvaSub){S.charts.tvaSub.destroy();delete S.charts.tvaSub;}const wrap=ctx.parentElement;if(wrap){const h=wrap.offsetHeight>0?wrap.offsetHeight:380;ctx.style.width='100%';ctx.style.height=h+'px';}const tva=S.tva,m=S.month,isYTD=m==='all';const getA=row=>!row?0:(isYTD?(row.ytd?row.ytd.actual:0):((row.monthly&&row.monthly[m])?row.monthly[m].actual:0));const getT=row=>!row?0:(isYTD?(row.ytd?row.ytd.target:0):((row.monthly&&row.monthly[m])?row.monthly[m].target:0));const sharedOpts={responsive:true,maintainAspectRatio:false,cutout:'62%',plugins:{legend:{position:'bottom',labels:{color:C.text,font:{size:10},boxWidth:10,padding:10}},tooltip:{backgroundColor:'#fff',borderColor:C.border,borderWidth:1.5,titleColor:C.text,bodyColor:C.muted,padding:10,cornerRadius:8,callbacks:{label:c=>{const tot=c.dataset.data.reduce((s,v)=>s+v,0)||1;return` ${c.label}: ${peso(c.raw)} (${(c.raw/tot*100).toFixed(1)}%)`}}}}};if(sub==='revenue'){const rev=tva.revenue;const revSchema=getTvaRevSchema();const items=revSchema.map(s=>({l:s.l,v:rev[s.key]?getA(rev[s.key]):0,c:s.c})).filter(i=>i.v>0);S.charts.tvaSub=new Chart(ctx,{type:'doughnut',data:{labels:items.map(i=>i.l),datasets:[{data:items.map(i=>i.v),backgroundColor:items.map(i=>i.c),borderColor:'#fff',borderWidth:3,hoverOffset:8}]},options:sharedOpts});}else if(sub==='expenses'){const exp=tva.expenses;const eMap=getTvaExpSchema();const items=eMap.map(i=>({l:i.l,v:exp[i.k]?getA(exp[i.k]):0,c:i.c})).filter(i=>i.v>0).sort((a,b)=>b.v-a.v).slice(0,8);S.charts.tvaSub=new Chart(ctx,{type:'doughnut',data:{labels:items.map(i=>i.l),datasets:[{data:items.map(i=>i.v),backgroundColor:items.map(i=>i.c),borderColor:'#fff',borderWidth:3,hoverOffset:8}]},options:sharedOpts});}else{const niMo=(tva.netIncome&&tva.netIncome.monthly)||{};const actM=MONTHS.filter(mo=>niMo[mo]&&(niMo[mo].actual!==0||niMo[mo].target!==0));const niAct=actM.map(mo=>niMo[mo].actual||0);const niTgt=actM.map(mo=>niMo[mo].target||0);S.charts.tvaSub=new Chart(ctx,{type:'bar',data:{labels:actM,datasets:[{label:'Target',data:niTgt,backgroundColor:'rgba(203,213,225,.5)',borderColor:'#94a3b8',borderWidth:1.5,borderRadius:4},{label:'Actual',data:niAct,backgroundColor:niAct.map(v=>v>=0?'rgba(34,197,94,.3)':'rgba(239,68,68,.3)'),borderColor:niAct.map(v=>v>=0?C.green2:C.red2),borderWidth:2,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{labels:{color:C.text,font:{size:11},boxWidth:10}},tooltip:{backgroundColor:'#fff',borderColor:C.border,borderWidth:1.5,titleColor:C.text,bodyColor:C.muted,padding:10,cornerRadius:8,callbacks:{label:c=>' '+c.dataset.label+': '+peso(c.raw)}}},scales:{x:{grid:{display:false},ticks:{color:C.muted,font:{size:10}}},y:{grid:{color:'#f1f5f9'},ticks:{color:C.muted,font:{size:10},callback:v=>peso(v,true)},afterDataLimits(scale){const abs=Math.max(Math.abs(scale.min),Math.abs(scale.max));scale.min=-abs*1.1;scale.max=abs*1.1;}}}}});}}
+
 function buildStats(id){const v=getVals(),ob=getOpexBD()||{};const gm=v.sales>0?v.gp/v.sales:0,nm=v.sales>0?v.ni/v.sales:0;const map={sales:[{v:peso(v.sales,true),l:'Net Sales'},{v:peso(v.gp,true),l:'Gross Profit'},{v:pct(gm),l:'GM %'},{v:peso(v.ni,true),l:'Net Income'}],gp:[{v:peso(v.gp,true),l:'Gross Profit'},{v:peso(v.cogs,true),l:'Total COGS'},{v:pct(gm),l:'GM %'},{v:peso(v.sales,true),l:'Net Sales'}],opex:[{v:peso(v.opex,true),l:'Total OpEx'},{v:peso(ob.comp||0,true),l:'Compensation'},{v:peso(ob.ga||0,true),l:'G&A'},{v:peso(ob.comm||0,true),l:'Commissions'}],ni:[{v:peso(v.ni,true),l:'Net Income'},{v:peso(v.sales,true),l:'Revenue'},{v:peso(v.gp,true),l:'Gross Profit'},{v:pct(nm),l:'Net Margin'}],bonus:(()=>{const sd=S.sum,d2=S.data,mt=50000,at=mt*12;const tp=MONTHS.reduce((s,m,i)=>s+(sd?(sd.opex.totalCommissions[m]||0):(d2.monthlyTrend.opex[i]*0.05)),0);const metC=MONTHS.filter((m,i)=>(sd?(sd.opex.totalCommissions[m]||0):(d2.monthlyTrend.opex[i]*0.05))>=mt).length;return[{v:peso(tp,true),l:'Total Progress'},{v:peso(at,true),l:'Annual Target'},{v:metC+'/12',l:'Months Met'},{v:((tp/at)*100).toFixed(1)+'%',l:'Achievement'}];})(),ga:(()=>{const ob2=getOpexBD()||{};const gaTotal=ob2.ga||0;return[{v:peso(gaTotal,true),l:'Total G&A'},{v:peso(ob2.comp||0,true),l:'vs Compensation'},{v:peso(ob2.comm||0,true),l:'vs Commissions'},{v:((gaTotal/((ob2.comp||0)+(ob2.ga||0)+(ob2.comm||0)||1))*100).toFixed(1)+'%',l:'% of OpEx'}];})()};return(map[id]||[]).map(s=>`<div class="dstat"><div class="dstat-val">${s.v}</div><div class="dstat-lbl">${s.l}</div></div>`).join('');}
 function buildOpexDrill(){const ob=getOpexBD()||{};const total=(ob.comp||0)+(ob.ga||0)+(ob.comm||0)||1;const subCards=[{id:'comp',cls:'sc-comp',icon:'bi-people-fill',label:'Compensation',val:ob.comp||0},{id:'ga',cls:'sc-ga',icon:'bi-building',label:'G&A Expenses',val:ob.ga||0},{id:'comm',cls:'sc-comm',icon:'bi-briefcase-fill',label:'Commissions',val:ob.comm||0}];const subCardHtml=`<div class="row g-2 mb-3">${subCards.map(sc=>`<div class="col-12 col-sm-4"><div class="opex-sub-card ${sc.cls}${S.opexSub===sc.id?' active':''}" onclick="setOpexSub('${sc.id}')"><div class="sc-label"><i class="bi ${sc.icon} me-1"></i>${sc.label}</div><div class="sc-value">${peso(sc.val,true)}</div><div class="sc-pct">${((sc.val/total)*100).toFixed(1)}% of OpEx</div><div class="sc-bar-track"><div class="sc-bar-fill" style="width:${((sc.val/total)*100).toFixed(1)}%"></div></div></div></div>`).join('')}</div>`;const statsHtml=`<div class="drill-stats" style="margin-bottom:16px;"><div class="dstat"><div class="dstat-val">${peso(total,true)}</div><div class="dstat-lbl">Total OpEx</div></div><div class="dstat"><div class="dstat-val">${((ob.comp||0)/total*100).toFixed(1)}%</div><div class="dstat-lbl">Comp %</div></div><div class="dstat"><div class="dstat-val">${((ob.ga||0)/total*100).toFixed(1)}%</div><div class="dstat-lbl">G&A %</div></div><div class="dstat"><div class="dstat-val">${((ob.comm||0)/total*100).toFixed(1)}%</div><div class="dstat-lbl">Comm %</div></div></div>`;const contentTabs=`<div class="drill-tabs" style="margin-bottom:16px;"><button class="dtab${S.opexSubTab!=='table'?' active':''}" onclick="setOpexSubTab('chart')"><i class="bi bi-bar-chart me-1"></i>Chart</button><button class="dtab${S.opexSubTab==='table'?' active':''}" onclick="setOpexSubTab('table')"><i class="bi bi-table me-1"></i>Table</button></div>`;return statsHtml+subCardHtml+contentTabs+`<div id="opexContent" class="opex-content-area">${buildOpexSubContent()}</div>`;}
 function setOpexSub(sub){S.opexSub=sub;if(S.activeDrill==='opex')openDrill('opex');}
@@ -1405,6 +1544,9 @@ const dcc=id=>{if(S.charts[id]){S.charts[id].destroy();delete S.charts[id];}};
 function renderTrend(){const d=S.data.monthlyTrend;dcc('chartTrend');S.charts.chartTrend=new Chart(el('chartTrend'),{type:'line',data:{labels:MONTHS,datasets:[{label:'Net Sales',data:d.sales,borderColor:C.blue2,backgroundColor:C.blueA,fill:true,tension:.4,pointRadius:3,borderWidth:2},{label:'Gross Profit',data:d.grossProfit,borderColor:C.green2,backgroundColor:C.greenA,fill:true,tension:.4,pointRadius:3,borderWidth:2},{label:'Net Income',data:d.netIncome,borderColor:C.teal2,backgroundColor:'transparent',fill:false,tension:.4,pointRadius:3,borderWidth:2,borderDash:[5,3]}]},options:mkLineOpts()});}
 function renderDonut(){const v=getVals(),gm=v.sales>0?v.gp/v.sales:0;el('donutPct').textContent=(gm*100).toFixed(1)+'%';const fc=gm>=.3?C.green2:gm>=.1?C.teal2:C.orange2;el('donutPct').style.color=fc;dcc('chartDonut');S.charts.chartDonut=new Chart(el('chartDonut'),{type:'doughnut',data:{labels:['Gross Margin','COGS %'],datasets:[{data:[Math.max(0,gm*100),Math.max(0,(1-gm)*100)],backgroundColor:[fc,'#e2e8f0'],borderColor:['#fff','#fff'],borderWidth:3}]},options:{responsive:false,cutout:'72%',plugins:{legend:{display:false},tooltip:{enabled:false}}}});el('donutLegend').innerHTML=[{dot:fc,n:'Gross Margin',v:pct(gm)},{dot:'#e2e8f0',n:'COGS Share',v:pct(1-gm)},{dot:C.teal2,n:'Net Income',v:peso(v.ni,true)}].map(r=>`<div class="dl-row"><span class="dl-dot" style="background:${r.dot}"></span><span class="dl-name">${r.n}</span><span class="dl-val">${r.v}</span></div>`).join('');}
 
+// ─────────────────────────────────────────────────────────────
+//  INIT
+// ─────────────────────────────────────────────────────────────
 setInterval(()=>{el('clockEl').textContent=new Date().toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit',second:'2-digit'});},1000);
 (()=>{const sel=el('selYear');for(let y=2023;y<=2030;y++){const o=document.createElement('option');o.value=y;o.textContent=y;sel.appendChild(o);}sel.value='2026';})();
 applyTheme('trading');
@@ -1412,6 +1554,190 @@ fetchData();
 let cd=30,timer=null;
 function startCD(){clearInterval(timer);cd=30;timer=setInterval(()=>{cd--;if(cd<=0){fetchData();cd=30;}},1000);}
 startCD();
+  const peso = (n, compact) => {
+  if (n == null || isNaN(n)) return '₱0.00';
+  const formatter = new Intl.NumberFormat('en-PH', {
+    style: 'currency',
+    currency: 'PHP',
+    notation: compact && Math.abs(n) >= 1000 ? 'compact' : 'standard',
+    maximumFractionDigits: 2
+  });
+  return formatter.format(n);
+};
+
+const pct = (n) => (n == null || isNaN(n)) ? '0%' : (n * 100).toFixed(1) + '%';
+
+// ═══════════════════════════════════════════════════════════════
+//  CORE LOGIC
+// ═══════════════════════════════════════════════════════════════
+
+function init() {
+  const yrSelect = el('selYear');
+  const currentYear = new Date().getFullYear();
+  for (let y = currentYear; y >= 2024; y--) {
+    const opt = document.createElement('option');
+    opt.value = y; opt.textContent = y;
+    yrSelect.appendChild(opt);
+  }
+  
+  updateClock();
+  setInterval(updateClock, 1000);
+  fetchData();
+}
+
+function updateClock() {
+  const now = new Date();
+  el('clockEl').textContent = now.toLocaleTimeString('en-US', { hour12: false });
+}
+
+function switchCompany(co) {
+  S.company = co;
+  // Update UI Tabs
+  document.querySelectorAll('.co-tab').forEach(t => t.classList.remove('active'));
+  el(`coTab-${co}`).classList.add('active');
+  
+  // Theme updates
+  const theme = CO_THEMES[co];
+  document.documentElement.style.setProperty('--co-primary', theme.primary);
+  document.documentElement.style.setProperty('--co-primary2', theme.primary2);
+  document.documentElement.style.setProperty('--co-bg', theme.bg);
+  document.documentElement.style.setProperty('--co-bd', theme.bd);
+  
+  el('navLogo').textContent = theme.logoText;
+  el('navLogo').style.background = theme.logoBg;
+
+  // Toggle Visibility
+  if (co === 'alm') {
+    el('view-is').style.display = 'none';
+    el('view-alm').style.display = 'block';
+  } else {
+    el('view-is').style.display = 'block';
+    el('view-alm').style.display = 'none';
+  }
+  
+  fetchData();
+}
+
+async function fetchData(isRefresh = false) {
+  const status = el('statusEl');
+  status.className = 'status-alert loading';
+  status.innerHTML = '<span class="spin"></span> Syncing data from Google Sheets...';
+  
+  try {
+    const url = APIS[S.company];
+    const response = await fetch(`${url}?year=${S.year}&month=${S.month}`);
+    const result = await response.json();
+    
+    S.data = result;
+    renderDashboard();
+    
+    status.className = 'status-alert ok';
+    status.innerHTML = `<i class="bi bi-check-circle-fill"></i> Data updated: ${new Date().toLocaleTimeString()}`;
+  } catch (err) {
+    status.className = 'status-alert error';
+    status.innerHTML = '<i class="bi bi-exclamation-triangle-fill"></i> Error connecting to API.';
+    console.error(err);
+  }
+}
+
+function renderDashboard() {
+  if (S.company === 'alm') {
+    renderALMView();
+  } else {
+    renderStandardView();
+  }
+}
+
+function renderStandardView() {
+  el('periodHead').style.display = 'flex';
+  el('periodTitle').textContent = CO_THEMES[S.company].name;
+  el('periodBadge').textContent = S.month === 'all' ? `YTD ${S.year}` : `${MN[S.month]} ${S.year}`;
+  
+  const grid = el('kpiGrid');
+  grid.innerHTML = '';
+  
+  // Mocking Main KPI Data from S.data
+  const kpis = [
+    { label: 'Gross Sales', val: S.data.summary.grossSales, color: 'blue', icon: 'bi-cart-check' },
+    { label: 'Net Income', val: S.data.summary.netIncome, color: 'teal', icon: 'bi-bank' },
+    { label: 'OPEX', val: S.data.summary.opex, color: 'orange', icon: 'bi-graph-down' }
+  ];
+
+  kpis.forEach(k => {
+    const card = document.createElement('div');
+    card.className = 'col-md-4';
+    card.innerHTML = `
+      <div class="kpi kpi-${k.color}">
+        <i class="bi ${k.icon} kpi-icon"></i>
+        <div class="kpi-label">${k.label}</div>
+        <div class="kpi-value">${peso(k.val, true)}</div>
+        <div class="kpi-bar"><div class="kpi-bar-track"><div class="kpi-bar-fill" style="width:70%"></div></div></div>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+
+  renderCharts();
+}
+
+function renderCharts() {
+  // Destroy existing charts to prevent hover flickering
+  Object.values(S.charts).forEach(c => c?.destroy());
+
+  const ctxTrend = el('chartTrend').getContext('2d');
+  S.charts.trend = new Chart(ctxTrend, {
+    type: 'line',
+    data: {
+      labels: MONTHS,
+      datasets: [{
+        label: 'Net Income',
+        data: S.data.trends.netIncome,
+        borderColor: CO_THEMES[S.company].primary,
+        tension: 0.4,
+        fill: true,
+        backgroundColor: 'rgba(29,78,216,0.05)'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9' } } }
+    }
+  });
+
+  const ctxDonut = el('chartDonut').getContext('2d');
+  S.charts.donut = new Chart(ctxDonut, {
+    type: 'doughnut',
+    data: {
+      labels: ['Cost of Sales', 'Net Profit'],
+      datasets: [{
+        data: [S.data.summary.cos, S.data.summary.netIncome],
+        backgroundColor: [C.orange2, C.teal2],
+        borderWidth: 0
+      }]
+    },
+    options: {
+      cutout: '80%',
+      plugins: { legend: { display: false } }
+    }
+  });
+  
+  el('donutPct').textContent = pct(S.data.summary.netIncome / S.data.summary.grossSales);
+}
+
+function onYearChange() {
+  S.year = el('selYear').value;
+  fetchData();
+}
+
+function onMonthChange() {
+  S.month = el('selMonth').value;
+  fetchData();
+}
+
+// Start App
+window.onload = init;
 </script>
 </body>
 </html>
